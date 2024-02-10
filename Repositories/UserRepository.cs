@@ -29,4 +29,8 @@ public class UserRepository : IUserRepository
         await _userCollection.InsertOneAsync(user);
     }
 
+    public async Task<IEnumerable<User>> GetUsers()
+    {
+        return await _userCollection.Find(_ => true).ToListAsync();
+    }
 }

@@ -11,9 +11,9 @@ public class Book
     public string Title { get; set; }
     public string Description { get; set; }
     public DateTime PublicationDate { get; set; }
-    public List<ObjectId> AuthorIds { get; set; }
-    public List<ObjectId> CategoryIds { get; set; }
-    public List<ObjectId> PublisherIds { get; set; }
+    public List<ObjectId> AuthorIds { get; set; } = new List<ObjectId>();
+    public List<ObjectId> CategoryIds { get; set; } = new List<ObjectId>();
+    public List<ObjectId> PublisherIds { get; set; } = new List<ObjectId>();
     // public List<Bookcase> Bookcases { get; set; }
     // public List<Review> Reviews { get; set; }   
 }

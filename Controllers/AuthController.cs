@@ -10,6 +10,8 @@ using MongoDB.Driver;
 
 namespace API.Controllers;
 
+[ApiController]
+[Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
     private readonly RegisterService _registerService;
@@ -35,6 +37,17 @@ public class AuthController : ControllerBase
         // var mongoDatabase = mongoClient.GetDatabase(dbSettings.Value.DatabaseName);
         // _userCollection = mongoDatabase.GetCollection<User>(dbSettings.Value.UserCollectionName);
     }
+
+    [HttpGet("users")]
+    public async Task<IActionResult> GetUsers()
+    {
+        var users = await _userRepository.GetUsers();
+
+        if (users == null) return NotFound("No users");
+
+        return Ok(users);
+    }
+
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto registerDto)

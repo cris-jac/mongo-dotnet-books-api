@@ -2,6 +2,9 @@ using API.Configurations;
 using API.Interfaces;
 using API.Repositories;
 using API.Services;
+using Microsoft.Extensions.Options;
+using MongoDB.Driver;
+using SharpCompress.Readers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,8 +15,23 @@ builder.Services.AddSwaggerGen();
 
 // MongoDb
 builder.Services.Configure<DatabaseSettings>(
-    builder.Configuration.GetSection(key:"MongoDatabase")
+    builder.Configuration.GetSection("MongoDatabase")
 );
+
+builder.Services.AddSingleton<IMongoClient>(sp => 
+{
+    var settings = sp.GetRequiredService<IOptions<DatabaseSettings>>().Value;
+    return new MongoClient(settings.ConnectionString);
+});
+
+builder.Services.AddScoped<IMongoDatabase>(sp => 
+{
+    var settings = sp.GetRequiredService<IOptions<DatabaseSettings>>().Value;
+    var client = sp.GetRequiredService<IMongoClient>();
+    return client.GetDatabase(settings.DatabaseName);
+});
+
+builder.Services.AddScoped<Initializer>();
 
 // Controllers
 builder.Services.AddControllers();
@@ -25,6 +43,8 @@ builder.Services.AddScoped<TokenService>();
 
 // Interfaces
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IReaderRepository, ReaderRepository>();
+builder.Services.AddScoped<IBookRepository, BookRepository>();
 
 var app = builder.Build();
 
@@ -33,6 +53,14 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+// MongoDb
+using (var scope = app.Services.CreateScope())
+{
+    // var serviceProvider = scope.ServiceProvider;
+    var initializer = scope.ServiceProvider.GetRequiredService<Initializer>();
+    initializer.InitializeCollections();
 }
 
 // Controllers
