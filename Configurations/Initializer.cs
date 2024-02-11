@@ -1,4 +1,5 @@
 using API.Models;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
@@ -53,6 +54,7 @@ public class Initializer
 
     private void SeedData()
     {
+        // Books
         var booksCollection = _database.GetCollection<Book>(_settings.BookCollectionName);
         if (booksCollection.CountDocuments(FilterDefinition<Book>.Empty) == 0)
         {
@@ -64,6 +66,34 @@ public class Initializer
             };
 
             booksCollection.InsertMany(initializeBooks);
+        }
+
+        // Authors
+        var authorsCollection = _database.GetCollection<Author>(_settings.AuthorCollectionName);
+        if (authorsCollection.CountDocuments(FilterDefinition<Author>.Empty) == 0)
+        {
+            var initializeAuthors = new List<Author>
+            {
+                new Author { Name = "Roberto Arlt", Bio = "Argentine writer known for his innovative and experimental works. His writing often explored themes of urban life, social inequality, and the human condition. Arlt's works are characterized by their raw, gritty realism and their portrayal of marginalized characters struggling to survive in the harsh realities of modern society." },
+                new Author { Name = "Franz Kafka", Bio = "German-speaking Bohemian, today Czech Republic, writer known for his surreal and existential works. Kafka's works are characterized by their dream-like quality, labyrinthine narratives, and exploration of the human psyche. Some of his most famous works include 'The Metamorphosis','The Trial', and 'The Castle', which have had a profound influence on modern literature and philosophy." },
+                new Author { Name = "George Orwell", Bio = "English writer known for his politically charged and dystopian works. His writing often critiqued totalitarianism, imperialism, and social injustice, drawing from his own experiences and observations. Some of his most famous works include 'Animal Farm' and 'Nineteen Eighty-Four', which have become seminal texts in the genre of dystopian literature and have had a lasting impact on popular culture." }
+            };
+
+            authorsCollection.InsertMany(initializeAuthors);
+        }
+
+        // Nationalities
+        var nationalitiesCollection = _database.GetCollection<Nationality>(_settings.NationalityCollectionName);
+        if (nationalitiesCollection.CountDocuments(FilterDefinition<Nationality>.Empty) == 0)
+        {
+            var initializeNationalities = new List<Nationality>
+            {
+                new Nationality { Name = "Argentina" },
+                new Nationality { Name = "Great Britain" },
+                new Nationality { Name = "Czech Republic" }
+            };
+
+            nationalitiesCollection.InsertMany(initializeNationalities);
         }
     }
 }
