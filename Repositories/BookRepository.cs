@@ -9,58 +9,61 @@ namespace API.Repositories;
 
 public class BookRepository : IBookRepository
 {
-    private IMongoCollection<Book> _bookRepository;
-    public BookRepository(IOptions<DatabaseSettings> dbSettings)
+    private IMongoCollection<Book> _bookCollection;
+    public BookRepository(
+        IMongoDatabase database,
+        IOptions<DatabaseSettings> dbSettings
+    )
     {
-        var mongoClient = new MongoClient(dbSettings.Value.ConnectionString);
-        var mongoDatabase = mongoClient.GetDatabase(dbSettings.Value.DatabaseName);
-        _bookRepository = mongoDatabase.GetCollection<Book>(dbSettings.Value.BookCollectionName);
+        _bookCollection = database.GetCollection<Book>(dbSettings.Value.BookCollectionName);
     }
     public async Task AddAsync(Book book)
     {
-        await _bookRepository.InsertOneAsync(book);
+        await _bookCollection.InsertOneAsync(book);
     }
 
     public async Task<bool> BookExists(string id)
     {
-        return await _bookRepository.Find(b => b.Id == id).AnyAsync();
+        return await _bookCollection.Find(b => b.Id == id).AnyAsync();
     }
 
     public async Task<IEnumerable<Book>> GetAllBooks()
     {
-        return await _bookRepository.Find(_ => true).ToListAsync(); 
+        return await _bookCollection.Find(_ => true).ToListAsync(); 
     }
 
     public async Task<Book> GetBookById(string id)
     {
-        return await _bookRepository.Find(b => b.Id == id).FirstOrDefaultAsync();
+        return await _bookCollection.Find(b => b.Id == id).FirstOrDefaultAsync();
     }
-
-    public async Task<IEnumerable<Book>> GetBooksByAuthor(string authorId)
+    
+    public async Task<bool> RemoveAsync(string id)
     {
-        ObjectId authorObjectId = ObjectId.Parse(authorId);
-        return await _bookRepository.Find(b => b.AuthorIds.Contains(authorObjectId)).ToListAsync();
-    }
-
-    public async Task<IEnumerable<Book>> GetBooksByCategory(string categoryId)
-    {
-        ObjectId categoryObjectId = ObjectId.Parse(categoryId);
-        return await _bookRepository.Find(b => b.CategoryIds.Contains(categoryObjectId)).ToListAsync();
-    }
-
-    public async Task<IEnumerable<Book>> GetBooksByPublisher(string publisherId)
-    {
-        ObjectId publisherObjectId = ObjectId.Parse(publisherId);
-        return await _bookRepository.Find(b => b.PublisherIds.Contains(publisherObjectId)).ToListAsync();
-    }
-
-    public async Task RemoveAsync(string id)
-    {
-        await _bookRepository.DeleteOneAsync(b => b.Id == id);
+        var deleted = await _bookCollection.DeleteOneAsync(b => b.Id == id);
+        return deleted.DeletedCount > 0;
     }
 
     public async Task UpdateAsync(string id, Book book)
     {
-        await _bookRepository.ReplaceOneAsync(b => b.Id == id, book);
+        await _bookCollection.ReplaceOneAsync(b => b.Id == id, book);
     }
+
+    // public async Task<IEnumerable<Book>> GetBooksByAuthor(string authorId)
+    // {
+    //     ObjectId authorObjectId = ObjectId.Parse(authorId);
+    //     return await _bookRepository.Find(b => b.AuthorIds.Contains(authorObjectId)).ToListAsync();
+    // }
+
+    // public async Task<IEnumerable<Book>> GetBooksByCategory(string categoryId)
+    // {
+    //     ObjectId categoryObjectId = ObjectId.Parse(categoryId);
+    //     return await _bookRepository.Find(b => b.CategoryIds.Contains(categoryObjectId)).ToListAsync();
+    // }
+
+    // public async Task<IEnumerable<Book>> GetBooksByPublisher(string publisherId)
+    // {
+    //     ObjectId publisherObjectId = ObjectId.Parse(publisherId);
+    //     return await _bookRepository.Find(b => b.PublisherIds.Contains(publisherObjectId)).ToListAsync();
+    // }
+
 }

@@ -26,8 +26,13 @@ public class Initializer
         }
 
         CreateCollectionIfNotExists(_settings.BookCollectionName);
-        // CreateCollecrtionIfNotExists(_settings.UserCollectionName);
+        CreateCollectionIfNotExists(_settings.UserCollectionName);
         CreateCollectionIfNotExists(_settings.ReaderCollectionName);
+        CreateCollectionIfNotExists(_settings.AuthorCollectionName);
+        CreateCollectionIfNotExists(_settings.NationalityCollectionName);
+        CreateCollectionIfNotExists(_settings.CategoryCollectionName);
+        CreateCollectionIfNotExists(_settings.PublisherCollectionName);
+        CreateCollectionIfNotExists(_settings.ReviewCollectionName);
 
         SeedData();
     }

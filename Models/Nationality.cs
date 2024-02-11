@@ -3,7 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace API.Models;
 
-public class MyClass
+public class Nationality
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]

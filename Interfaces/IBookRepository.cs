@@ -8,9 +8,9 @@ public interface IBookRepository
     Task<Book> GetBookById(string id);
     Task AddAsync(Book book);
     Task UpdateAsync(string id, Book book);
-    Task RemoveAsync(string id);
+    Task<bool> RemoveAsync(string id);
     Task<bool> BookExists(string id);
-    Task<IEnumerable<Book>> GetBooksByAuthor(string authorId);
-    Task<IEnumerable<Book>> GetBooksByCategory(string categoryId);
-    Task<IEnumerable<Book>> GetBooksByPublisher(string publisherId);
+    // Task<IEnumerable<Book>> GetBooksByAuthor(string authorId);
+    // Task<IEnumerable<Book>> GetBooksByCategory(string categoryId);
+    // Task<IEnumerable<Book>> GetBooksByPublisher(string publisherId);
 }

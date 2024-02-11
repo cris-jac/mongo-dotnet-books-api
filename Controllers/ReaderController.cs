@@ -6,7 +6,7 @@ using MongoDB.Bson;
 namespace  API.Controllers;
 
 [ApiController]
-[Route("api/[controller]s")]
+[Route("api/[controller]")]
 public class ReaderController : ControllerBase
 {
     private readonly IReaderRepository _readerRepository;
