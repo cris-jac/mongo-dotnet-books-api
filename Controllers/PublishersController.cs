@@ -22,7 +22,7 @@ public class PublishersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAllPublishers()
     {
-        var publishers = await _publisherRepository.GetAllPublishers();
+        var publishers = await _publisherRepository.GetPublishers();
 
         if (publishers == null) return NotFound("There are no publishers yet");
 
@@ -34,7 +34,7 @@ public class PublishersController : ControllerBase
     {
         Publisher newPublisher = new Publisher
         {
-            Name = publisherDto.Name
+            Name = publisherDto.PublisherName
         };
 
         await _publisherRepository.AddPublisher(newPublisher);
@@ -47,7 +47,10 @@ public class PublishersController : ControllerBase
     {
         var publisherExists = await _publisherRepository.PublisherExists(id);
 
-        if (!publisherExists) return NotFound("Publisher with this Id does not exist");
+        if (!publisherExists)
+        {
+            return NotFound("Publisher with this Id does not exist");
+        }
 
         var deleteResult = await _publisherRepository.RemovePublisher(id);
 

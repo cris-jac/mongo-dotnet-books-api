@@ -23,9 +23,9 @@ public class PublisherRepository : IPublisherRepository
         await _publisherRepository.InsertOneAsync(publisher);
     }
 
-    public async Task<IEnumerable<Publisher>> GetAllPublishers()
+    public async Task<IEnumerable<Publisher>> GetPublishers()
     {
-        return await _publisherRepository.Find(_=>true).ToListAsync();
+        return await _publisherRepository.Find(_ => true).ToListAsync();
     }
 
     public async Task<bool> PublisherExists(string id)
