@@ -7,6 +7,7 @@ public interface INationalityRepository
     Task<IEnumerable<Nationality>> GetAllNationalities();
     Task<bool> NationalityExists(string id);
     Task<Nationality> GetNationalityById(string id);
+    Task<Nationality> GetNationalityByName(string name);
     Task AddNationality(Nationality nationality);
     Task<bool> RemoveNationality(string id);
     Task UpdateNationality(string id, Nationality nationality);

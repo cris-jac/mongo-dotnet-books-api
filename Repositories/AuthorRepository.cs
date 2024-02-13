@@ -46,7 +46,7 @@ public class AuthorRepository : IAuthorRepository
         return await _authorRepository.Find(filter).ToListAsync();
     }
 
-    public async Task<bool> RemoveAsync(string id)
+    public async Task<bool> RemoveAuthor(string id)
     {
         var deleted = await _authorRepository.DeleteOneAsync(a => a.Id == id);
         return deleted.DeletedCount > 0;

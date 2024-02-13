@@ -2,6 +2,7 @@ using API.Configurations;
 using API.Interfaces;
 using API.Models;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace API.Repositories;
@@ -18,33 +19,40 @@ public class NationalityRepository : INationalityRepository
         _nationalityRepository = database.GetCollection<Nationality>(dbSettings.Value.NationalityCollectionName);
     }
 
-    public Task AddNationality(Nationality nationality)
+    public async Task AddNationality(Nationality nationality)
     {
-        throw new NotImplementedException();
+        await _nationalityRepository.InsertOneAsync(nationality);
     }
 
-    public Task<IEnumerable<Nationality>> GetAllNationalities()
+    public async Task<IEnumerable<Nationality>> GetAllNationalities()
     {
-        throw new NotImplementedException();
+        return await _nationalityRepository.Find(_ => true).ToListAsync();
     }
 
-    public Task<Nationality> GetNationalityById(string id)
+    public async Task<Nationality> GetNationalityById(string id)
     {
-        throw new NotImplementedException();
+        return await _nationalityRepository.Find(n => n.Id == id).FirstOrDefaultAsync();
     }
 
-    public Task<bool> NationalityExists(string id)
+    public async Task<Nationality> GetNationalityByName(string name)
     {
-        throw new NotImplementedException();
+        var filter = Builders<Nationality>.Filter.Regex("Name", new BsonRegularExpression(name, "i"));
+        return await _nationalityRepository.Find(filter).FirstOrDefaultAsync();
     }
 
-    public Task<bool> RemoveNationality(string id)
+    public async Task<bool> NationalityExists(string id)
     {
-        throw new NotImplementedException();
+        return await _nationalityRepository.Find(n => n.Id == id).AnyAsync();
     }
 
-    public Task UpdateNationality(string id, Nationality nationality)
+    public async Task<bool> RemoveNationality(string id)
     {
-        throw new NotImplementedException();
+        var deleted = await _nationalityRepository.DeleteOneAsync(n => n.Id == id);
+        return deleted.DeletedCount > 0;
+    }
+
+    public async Task UpdateNationality(string id, Nationality nationality)
+    {
+        await _nationalityRepository.ReplaceOneAsync(n => n.Id == id, nationality);
     }
 }

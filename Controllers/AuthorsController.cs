@@ -124,7 +124,7 @@ public class AuthorsController : ControllerBase
         {
             Name = authorDto.Name,
             Bio = authorDto.Bio,
-            NationalityId = ObjectId.Empty
+            NationalityId = string.IsNullOrEmpty(authorDto.NationalityId) ? ObjectId.Empty : ObjectId.Parse(authorDto.NationalityId)
         };
 
         await _authorRepository.AddAuthor(newAuthor);
@@ -139,7 +139,7 @@ public class AuthorsController : ControllerBase
 
         if (!authorExists) return NotFound("No author with this Id");
         
-        var deleteResult = await _authorRepository.RemoveAsync(id);
+        var deleteResult = await _authorRepository.RemoveAuthor(id);
 
         if (!deleteResult) return BadRequest("Error: Author not deleted");
 

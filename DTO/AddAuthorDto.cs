@@ -4,4 +4,5 @@ public class AddAuthorDto
 {
     public string Name { get; set; }
     public string Bio { get; set; }
+    public string NationalityId { get; set; }
 }
