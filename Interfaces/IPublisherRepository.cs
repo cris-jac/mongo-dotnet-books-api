@@ -4,7 +4,8 @@ namespace API.Interfaces;
 
 public interface IPublisherRepository
 {
+    Task<bool> PublisherExists(string id);
     Task<IEnumerable<Publisher>> GetAllPublishers();
     Task AddPublisher(Publisher publisher);
-    Task RemovePublisher(string id);
+    Task<bool> RemovePublisher(string id);
 }
