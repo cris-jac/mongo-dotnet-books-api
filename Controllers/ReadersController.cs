@@ -212,7 +212,7 @@ public class ReadersController : ControllerBase
     }
 
     [HttpPut("UpdateNationality")]
-    public async Task<IActionResult> AddNationalityToReader(string readerId, string nationalityId)
+    public async Task<IActionResult> UpdateNationalityToReader(string readerId, string nationalityId)
     {
         var readerExists = await _readerRepository.ReaderExists(readerId);
         if (!readerExists) return NotFound("Reader with this Id was not found");
