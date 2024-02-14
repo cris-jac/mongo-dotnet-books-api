@@ -12,4 +12,6 @@ public interface IAuthorRepository
     Task<bool> RemoveAuthor(string id);
     Task UpdateAuthor(string id, Author author);
     Task<bool> UpdateAuthorNationality(string authorId, string nationalityId);
+    //
+    Task<List<string>> GetAuthorsByIds(List<string> authorsIds);
 }

@@ -1,6 +1,7 @@
 using API.Configurations;
 using API.Interfaces;
 using API.Models;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -37,6 +38,30 @@ public class BookRepository : IBookRepository
         return await _bookCollection.Find(b => b.Id == id).FirstOrDefaultAsync();
     }
     
+    //
+    public async Task<IEnumerable<Book>> GetBooksByAuthor(string authorId)
+    {
+        ObjectId authorObjectId = ObjectId.Parse(authorId);
+        var filter = Builders<Book>.Filter.AnyIn(b => b.AuthorIds, new List<ObjectId> { authorObjectId });
+        return await _bookCollection.Find(filter).ToListAsync();
+    }
+
+    // public async Task<IEnumerable<Book>> GetBooksByAuthor(string authorId)
+    // {
+    //     ObjectId authorObjectId = ObjectId.Parse(authorId);
+    //     var filter = Builders<Book>.Filter.AnyIn(b => b.AuthorIds, new List<ObjectId> { authorObjectId });
+    //     return await _bookCollection.Find(filter).ToListAsync();
+    // }
+
+    // public async Task<IEnumerable<Book>> GetBooksByAuthor(string authorId)
+    // {
+    //     ObjectId authorObjectId = ObjectId.Parse(authorId);
+    //     var filter = Builders<Book>.Filter.AnyIn(b => b.AuthorIds, new List<ObjectId> { authorObjectId });
+    //     return await _bookCollection.Find(filter).ToListAsync();
+    // }
+
+    //
+
     public async Task<bool> RemoveAsync(string id)
     {
         var deleted = await _bookCollection.DeleteOneAsync(b => b.Id == id);
@@ -47,6 +72,35 @@ public class BookRepository : IBookRepository
     {
         await _bookCollection.ReplaceOneAsync(b => b.Id == id, book);
     }
+
+    //
+    public async Task<bool> AddAuthorToBook(string bookId, string authorId)
+    {
+        // var updateDefinition = Builders<Book>.Update.Set(b => b.AuthorIds, ObjectId.Parse(authorId));
+        var bookFiltered = Builders<Book>.Filter.Eq(b => b.Id, bookId);
+
+        var authorToAdd = Builders<Book>.Update.AddToSet(b => b.AuthorIds, ObjectId.Parse(authorId));
+
+        var updated = await _bookCollection.UpdateOneAsync(bookFiltered, authorToAdd);
+
+        return updated.ModifiedCount > 0;
+    }
+
+
+
+    //
+
+    public async Task<bool> RemoveAuthorFromBook(string bookId, string authorId)
+    {
+        var bookFiltered = Builders<Book>.Filter.Eq(b => b.Id, bookId);
+
+        var authorToRemove = Builders<Book>.Update.Pull(b => b.AuthorIds, ObjectId.Parse(authorId));
+
+        var updated = await _bookCollection.UpdateOneAsync(bookFiltered, authorToRemove);
+
+        return updated.ModifiedCount > 0;
+    }
+
 
     // public async Task<IEnumerable<Book>> GetBooksByAuthor(string authorId)
     // {

@@ -13,15 +13,18 @@ namespace API.Controllers;
 public class BookController : ControllerBase
 {
     private readonly IBookRepository _bookRepository;
+    private readonly IAuthorRepository _authorRepository;
 
     // private readonly IMongoCollection<Book> _bookRepository;
     public BookController(
         // IMongoDatabase mongoDatabase,
         // IOptions<DatabaseSettings> dbSettings
-        IBookRepository bookRepository
+        IBookRepository bookRepository,
+        IAuthorRepository authorRepository
     )
     {
         _bookRepository = bookRepository;
+        _authorRepository = authorRepository;
         // _bookRepository = mongoDatabase.GetCollection<Book>(dbSettings.Value.BookCollectionName);    
     }
 
@@ -42,7 +45,38 @@ public class BookController : ControllerBase
         // var book = await _bookRepository.Find(b => b.Id == id).FirstOrDefaultAsync();
         var book = await _bookRepository.GetBookById(id);
 
-        return Ok(book);
+        if (book == null) return NotFound("There are no books with this Id");
+
+        // Parse authors Ids to strings
+        List<string> authorsStringIds = book.AuthorIds.ConvertAll(id => id.ToString());
+        var authors = await _authorRepository.GetAuthorsByIds(authorsStringIds);
+
+        // Response Dto
+        GetBookDto bookDto = new GetBookDto
+        {
+            Id = book.Id,
+            Title = book.Title,
+            Description = book.Description,
+            Authors = authors ?? new List<string>()
+        };
+
+        return Ok(bookDto);
+    }
+
+    [HttpGet("GetByAuthor")]
+    public async Task<IActionResult> GetBooksByAuthor(string authorId)
+    {
+        var authorExists = await _authorRepository.AuthorExists(authorId);
+
+        if (!authorExists) return NotFound("Author with this Id does not exist");
+
+        var books = await _bookRepository.GetBooksByAuthor(authorId);
+
+        if (books == null) return NotFound("Error: Not found");
+
+        if (books.Count() == 0) return Ok("There are no books here");
+
+        return Ok(books);
     }
 
     // [HttpGet("GetByName")]
@@ -94,4 +128,41 @@ public class BookController : ControllerBase
 
         return Ok("Book deleted");
     }
+
+    [HttpPut("AddAuthorToBook")]
+    public async Task<IActionResult> AddAuthorToBook(string bookId, string authorId)
+    {
+        var bookExists = await _bookRepository.BookExists(bookId);
+
+        if (!bookExists) return NotFound("There is no book with this Id");
+
+        var authorExists = await _authorRepository.AuthorExists(authorId);
+
+        if (!authorExists) return NotFound("There is no author with this Id");
+        
+        var authorAddedToBook = await _bookRepository.AddAuthorToBook(bookId, authorId);
+
+        if (!authorAddedToBook) return BadRequest("Error adding author to book");
+
+        return Ok("Book's author updated");
+    }
+
+    [HttpPut("RemoveAuthorFromBook")]
+    public async Task<IActionResult> RemoveAuthorFromBook(string bookId, string authorId)
+    {
+        var bookExists = await _bookRepository.BookExists(bookId);
+
+        if (!bookExists) return NotFound("There is no book with this Id");
+
+        var authorExists = await _authorRepository.AuthorExists(authorId);
+
+        if (!authorExists) return NotFound("There is no author with this Id");
+        
+        var authorRemovedFromBook = await _bookRepository.RemoveAuthorFromBook(bookId, authorId);
+
+        if (!authorRemovedFromBook) return BadRequest("Error removing author from book");
+
+        return Ok("Book's author updated");
+    }
+    
 }

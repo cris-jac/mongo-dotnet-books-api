@@ -13,4 +13,8 @@ public interface IBookRepository
     // Task<IEnumerable<Book>> GetBooksByAuthor(string authorId);
     // Task<IEnumerable<Book>> GetBooksByCategory(string categoryId);
     // Task<IEnumerable<Book>> GetBooksByPublisher(string publisherId);
-}
+
+    Task<IEnumerable<Book>> GetBooksByAuthor(string authorId);
+    Task<bool> AddAuthorToBook(string bookId, string authorId);
+    Task<bool> RemoveAuthorFromBook(string bookId, string authorId);
+} 
