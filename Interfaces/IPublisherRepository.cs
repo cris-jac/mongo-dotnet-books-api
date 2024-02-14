@@ -8,4 +8,6 @@ public interface IPublisherRepository
     Task<IEnumerable<Publisher>> GetPublishers();
     Task AddPublisher(Publisher publisher);
     Task<bool> RemovePublisher(string id);
+    //
+    Task<List<string>> GetPublishersbyIds(List<string> publishersIds);
 }

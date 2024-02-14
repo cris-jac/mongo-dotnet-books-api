@@ -46,6 +46,21 @@ public class BookRepository : IBookRepository
         return await _bookCollection.Find(filter).ToListAsync();
     }
 
+    public async Task<IEnumerable<Book>> GetBooksByCategory(string categoryId)
+    {
+        ObjectId categoryObjectId = ObjectId.Parse(categoryId);
+        var filter = Builders<Book>.Filter.AnyIn(b => b.CategoryIds, new List<ObjectId> { categoryObjectId });
+        return await _bookCollection.Find(filter).ToListAsync();
+    }
+
+    public async Task<IEnumerable<Book>> GetBooksByPublisher(string publisherId)
+    {
+        ObjectId publisherObjectId = ObjectId.Parse(publisherId);
+        var filter = Builders<Book>.Filter.AnyIn(b => b.PublisherIds, new List<ObjectId> { publisherObjectId });
+        return await _bookCollection.Find(filter).ToListAsync();
+    }
+
+
     // public async Task<IEnumerable<Book>> GetBooksByAuthor(string authorId)
     // {
     //     ObjectId authorObjectId = ObjectId.Parse(authorId);
@@ -73,7 +88,7 @@ public class BookRepository : IBookRepository
         await _bookCollection.ReplaceOneAsync(b => b.Id == id, book);
     }
 
-    //
+    // Update Add
     public async Task<bool> AddAuthorToBook(string bookId, string authorId)
     {
         // var updateDefinition = Builders<Book>.Update.Set(b => b.AuthorIds, ObjectId.Parse(authorId));
@@ -86,10 +101,30 @@ public class BookRepository : IBookRepository
         return updated.ModifiedCount > 0;
     }
 
+    public async Task<bool> AddCategoryToBook(string bookId, string categoryId)
+    {
+        var bookFiltered = Builders<Book>.Filter.Eq(b => b.Id, bookId);
+
+        var categoryToAdd = Builders<Book>.Update.AddToSet(b => b.CategoryIds, ObjectId.Parse(categoryId));
+
+        var updated = await _bookCollection.UpdateOneAsync(bookFiltered, categoryToAdd);
+
+        return updated.ModifiedCount > 0;
+    }
+
+    public async Task<bool> AddPublisherToBook(string bookId, string publisherId)
+    {
+        var bookFiltered = Builders<Book>.Filter.Eq(b => b.Id, bookId);
+
+        var publisherToAdd = Builders<Book>.Update.AddToSet(b => b.PublisherIds, ObjectId.Parse(publisherId));
+
+        var updated = await _bookCollection.UpdateOneAsync(bookFiltered, publisherToAdd);
+
+        return updated.ModifiedCount > 0;
+    }
 
 
-    //
-
+    // Update Remove
     public async Task<bool> RemoveAuthorFromBook(string bookId, string authorId)
     {
         var bookFiltered = Builders<Book>.Filter.Eq(b => b.Id, bookId);
@@ -97,6 +132,28 @@ public class BookRepository : IBookRepository
         var authorToRemove = Builders<Book>.Update.Pull(b => b.AuthorIds, ObjectId.Parse(authorId));
 
         var updated = await _bookCollection.UpdateOneAsync(bookFiltered, authorToRemove);
+
+        return updated.ModifiedCount > 0;
+    }
+
+    public async Task<bool> RemoveCategoryFromBook(string bookId, string categoryId)
+    {
+        var bookFiltered = Builders<Book>.Filter.Eq(b => b.Id, bookId);
+
+        var categoryToRemove = Builders<Book>.Update.Pull(b => b.CategoryIds, ObjectId.Parse(categoryId));
+
+        var updated = await _bookCollection.UpdateOneAsync(bookFiltered, categoryToRemove);
+
+        return updated.ModifiedCount > 0;
+    }
+
+    public async Task<bool> RemovePublisherFromBook(string bookId, string publisherId)
+    {
+        var bookFiltered = Builders<Book>.Filter.Eq(b => b.Id, bookId);
+
+        var publisherToRemove = Builders<Book>.Update.Pull(b => b.PublisherIds, ObjectId.Parse(publisherId));
+
+        var updated = await _bookCollection.UpdateOneAsync(bookFiltered, publisherToRemove);
 
         return updated.ModifiedCount > 0;
     }

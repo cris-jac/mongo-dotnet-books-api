@@ -48,4 +48,14 @@ public class CategoryRepository : ICategoryRepository
     {
         await _categoryCollection.ReplaceOneAsync(c => c.Id == id, category);
     }
+
+    //
+    public async Task<List<string>> GetCategoriesByIds(List<string> categoriesIds)
+    {
+        var categoriesFilter = Builders<Category>.Filter.In(c => c.Id, categoriesIds);
+
+        var categories = await _categoryCollection.Find(categoriesFilter).ToListAsync();
+
+        return categories.Select(c => c.Name).ToList();
+    }
 }

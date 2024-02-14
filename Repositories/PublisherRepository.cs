@@ -38,4 +38,15 @@ public class PublisherRepository : IPublisherRepository
         var deleted = await _publisherCollection.DeleteOneAsync(p => p.Id == id);
         return deleted.DeletedCount > 0;
     }
+
+    // For BookController calls
+    public async Task<List<string>> GetPublishersbyIds(List<string> publishersIds)
+    {
+        // 
+        var publishersFilter = Builders<Publisher>.Filter.In(p => p.Id, publishersIds);
+
+        var publishers = await _publisherCollection.Find(publishersFilter).ToListAsync();
+
+        return publishers.Select(p => p.Name).ToList();
+    }
 }

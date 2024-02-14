@@ -7,4 +7,6 @@ public class GetBookDto
     public string Description { get; set; }
     public string PublicationYear { get; set; }
     public List<string> Authors { get; set; }
+    public List<string> Categories { get; set; }
+    public List<string> Publishers { get; set; }
 }

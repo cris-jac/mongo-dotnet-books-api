@@ -74,7 +74,6 @@ public class AuthorRepository : IAuthorRepository
         var authors = await _authorCollection.Find(authorsFilter).ToListAsync();
         
         // Select only names
-        return authors.Select(a => a.Name).ToList();
-        
+        return authors.Select(a => a.Name).ToList();   
     }
 }
