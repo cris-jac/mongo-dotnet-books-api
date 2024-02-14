@@ -177,4 +177,13 @@ public class BookRepository : IBookRepository
     //     return await _bookRepository.Find(b => b.PublisherIds.Contains(publisherObjectId)).ToListAsync();
     // }
 
+    // External purposes
+    public async Task<List<string>> GetBooksByIds(List<string> booksIds)
+    {
+        var booksFilter = Builders<Book>.Filter.In(b => b.Id, booksIds);
+
+        var books = await _bookCollection.Find(booksFilter).ToListAsync();
+
+        return books.Select(b => b.Title).ToList();
+    }
 }

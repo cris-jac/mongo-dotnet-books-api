@@ -10,46 +10,79 @@ namespace API.Repositories;
 
 public class ReaderRepository : IReaderRepository
 {
-    private IMongoCollection<Reader> _readerRepository;
-    public ReaderRepository(IOptions<DatabaseSettings> dbSettings)
+    private IMongoCollection<Reader> _readerCollection;
+    public ReaderRepository(
+        IMongoDatabase database,
+        IOptions<DatabaseSettings> dbSettings
+    )
     {
-        var mongoClient = new MongoClient(dbSettings.Value.ConnectionString);
-        var mongoDatabase = mongoClient.GetDatabase(dbSettings.Value.DatabaseName);
-        _readerRepository = mongoDatabase.GetCollection<Reader>(dbSettings.Value.ReaderCollectionName);
-    }
-
-    public async Task AddBookToList(string id, string bookId)
-    {
-        var reader = await _readerRepository.Find(r => r.Id == id).FirstOrDefaultAsync();
-        ObjectId bookObjectId = ObjectId.Parse(bookId);
-        reader.BookIds.Add(bookObjectId);
-        throw new NotImplementedException();        
+        // var mongoClient = new MongoClient(dbSettings.Value.ConnectionString);
+        // var mongoDatabase = mongoClient.GetDatabase(dbSettings.Value.DatabaseName);
+        // _readerCollection = mongoDatabase.GetCollection<Reader>(dbSettings.Value.ReaderCollectionName);
+        _readerCollection = database.GetCollection<Reader>(dbSettings.Value.ReaderCollectionName);
     }
 
     public async Task<IEnumerable<Reader>> GetAllAsync()
     {
-        return await _readerRepository.Find(_ => true).ToListAsync();
+        return await _readerCollection.Find(_ => true).ToListAsync();
     }
 
-    public async Task<IEnumerable<ObjectId>> GetBooksFromReader(string readerId)
-    {
-        var reader = await _readerRepository.Find(r => r.Id == readerId).FirstOrDefaultAsync();
-        var readerBooks = reader.BookIds;
-        throw new NotImplementedException();
-    }
+    // public async Task<IEnumerable<ObjectId>> GetBooksFromReader(string readerId)
+    // {
+    //     var reader = await _readerCollection.Find(r => r.Id == readerId).FirstOrDefaultAsync();
+    //     return reader.BookIds;
+    // }
 
     public async Task<Reader> GetReaderById(string id)
     {
-        return await _readerRepository.Find(r => r.Id ==  id).FirstOrDefaultAsync();
+        return await _readerCollection.Find(r => r.Id ==  id).FirstOrDefaultAsync();
     }
 
-    public Task<Reader> GetReaderByUsername(string username)
+    public async Task<Reader> GetReaderByUsername(string username)
     {
-        throw new NotImplementedException();
+        var filter = Builders<Reader>.Filter.Regex("Username", new BsonRegularExpression(username, "i"));
+        return await _readerCollection.Find(filter).FirstOrDefaultAsync();
     }
 
-    public Task RemoveBookFromList(string id, string bookId)
+    public async Task AddReader(Reader reader)
     {
-        throw new NotImplementedException();
+        await _readerCollection.InsertOneAsync(reader);
+    }
+
+    public async Task<bool> AddBookToList(string readerId, string bookId)
+    {
+        // var reader = await _readerCollection.Find(r => r.Id == id).FirstOrDefaultAsync();
+        // ObjectId bookObjectId = ObjectId.Parse(bookId);
+        // reader.BookIds.Add(bookObjectId);
+        var readerFiltered = Builders<Reader>.Filter.Eq(r => r.Id, readerId);
+
+        var bookToAdd = Builders<Reader>.Update.AddToSet(r => r.BookIds, ObjectId.Parse(bookId));
+
+        var updated = await _readerCollection.UpdateOneAsync(readerFiltered, bookToAdd);
+
+        return updated.ModifiedCount > 0;
+    }
+
+    public async Task<bool> RemoveBookFromList(string readerId, string bookId)
+    {
+        var readerFiltered = Builders<Reader>.Filter.Eq(r => r.Id, readerId);
+
+        var bookToRemove = Builders<Reader>.Update.Pull(r => r.BookIds, ObjectId.Parse(bookId));
+
+        var updated = await _readerCollection.UpdateOneAsync(readerFiltered, bookToRemove);
+
+        return updated.ModifiedCount > 0;
+    }
+
+    public async Task<bool> UpdateReaderNationality(string readerId, string nationalityId)
+    {
+        var updatedDef = Builders<Reader>.Update.Set(r => r.NationalityId, ObjectId.Parse(nationalityId));
+        var updated = await _readerCollection.UpdateOneAsync(r => r.Id == readerId, updatedDef);
+        return updated.ModifiedCount > 0;
+    }
+
+    public async Task<bool> ReaderExists(string id)
+    {
+        return await _readerCollection.Find(r => r.Id == id).AnyAsync();
     }
 }

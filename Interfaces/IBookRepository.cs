@@ -26,4 +26,7 @@ public interface IBookRepository
     Task<bool> RemoveCategoryFromBook(string bookId, string categoryId);
     Task<bool> AddPublisherToBook(string bookId, string publisherId);
     Task<bool> RemovePublisherFromBook(string bookId, string publisherId);
+
+    //
+    Task<List<string>> GetBooksByIds(List<string> booksIds);
 } 
