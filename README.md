@@ -1,5 +1,5 @@
-# Books API
-### .NET API with MongoDB as Database
+<center># Books API</center>
+<center>### .NET API with MongoDB as Database</center>
 <br>
 <br>
 
@@ -10,6 +10,7 @@
 
 ## Extra Resources
 UML class diagram available in /ExtraResources/UmlDiagram.png
+<br>
 <br>
 
 ## Installation
@@ -29,6 +30,7 @@ UML class diagram available in /ExtraResources/UmlDiagram.png
 ## Port
 By default, the port used in this app is:
 http://localhost:5238/swagger/index.html
+<br>
 <br>
 
 ## API endpoints
