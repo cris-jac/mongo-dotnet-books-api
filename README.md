@@ -2,12 +2,18 @@
 ### .NET API with MongoDB as Database
 
 
+
+
 ## Requirements
 * .NET SDK 8.0+
 * MongoDb
 
+
+
 ## Extra Resources
 UML class diagram available in /ExtraResources/UmlDiagram.png
+
+
 
 ## Installation
 1. Clone from github, using this command:
@@ -22,9 +28,12 @@ UML class diagram available in /ExtraResources/UmlDiagram.png
 4. Run the app:
 ```dotnet run```
 
+
+
 ## Port
 By default, the port used in this app is:
 http://localhost:5238/swagger/index.html
+
 
 
 ## API endpoints
