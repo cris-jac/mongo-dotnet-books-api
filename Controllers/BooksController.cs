@@ -2,6 +2,7 @@ using API.Configurations;
 using API.DTO;
 using API.Interfaces;
 using API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
@@ -9,6 +10,7 @@ using MongoDB.Driver;
 namespace API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class BooksController : ControllerBase
 {
@@ -34,6 +36,7 @@ public class BooksController : ControllerBase
         // _bookRepository = mongoDatabase.GetCollection<Book>(dbSettings.Value.BookCollectionName);    
     }
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> GetAllBooks()
     {
@@ -74,6 +77,7 @@ public class BooksController : ControllerBase
         return Ok(booksDto);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetBook(string id)
     {
@@ -108,6 +112,7 @@ public class BooksController : ControllerBase
         return Ok(bookDto);
     }
 
+    [AllowAnonymous]
     [HttpGet("GetByAuthor")]
     public async Task<IActionResult> GetBooksByAuthor(string authorId)
     {
@@ -154,6 +159,7 @@ public class BooksController : ControllerBase
         return Ok(booksDto);
     }
 
+    [AllowAnonymous]
     [HttpGet("GetByCategory")]
     public async Task<IActionResult> GetBooksByCategory(string categoryId)
     {
@@ -200,7 +206,7 @@ public class BooksController : ControllerBase
         return Ok(booksDto);
     }
 
-
+    [AllowAnonymous]
     [HttpGet("GetByPublisher")]
     public async Task<IActionResult> GetBooksByPublisher(string publisherId)
     {
@@ -257,6 +263,7 @@ public class BooksController : ControllerBase
     //     return Ok(book);
     // }
 
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> AddBook(AddBookDto bookDto)
     {
@@ -296,6 +303,7 @@ public class BooksController : ControllerBase
     // Put
 
     // Book - Author
+    [AllowAnonymous]
     [HttpPut("AddAuthorToBook")]
     public async Task<IActionResult> AddAuthorToBook(string bookId, string authorId)
     {
@@ -311,6 +319,7 @@ public class BooksController : ControllerBase
         return Ok("Book's author updated");
     }
 
+    [AllowAnonymous]
     [HttpPut("RemoveAuthorFromBook")]
     public async Task<IActionResult> RemoveAuthorFromBook(string bookId, string authorId)
     {
@@ -327,6 +336,7 @@ public class BooksController : ControllerBase
     }
 
     // Book - Category
+    [AllowAnonymous]
     [HttpPut("AddCategoryToBook")]
     public async Task<IActionResult> AddCategoryToBook(string bookId, string categoryId)
     {
@@ -342,6 +352,7 @@ public class BooksController : ControllerBase
         return Ok("Book's categories updated");
     }
 
+    [AllowAnonymous]
     [HttpPut("RemoveCategoryFromBook")]
     public async Task<IActionResult> RemoveCategoryFromBook(string bookId, string categoryId)
     {
@@ -359,6 +370,7 @@ public class BooksController : ControllerBase
 
 
     // Book - Publisher
+    [AllowAnonymous]
     [HttpPut("AddPublisherToBook")]
     public async Task<IActionResult> AddPublisherToBook(string bookId, string publisherId)
     {
@@ -374,6 +386,7 @@ public class BooksController : ControllerBase
         return Ok("Book's publishers updated");
     }
 
+    [AllowAnonymous]
     [HttpPut("RemovePublisherFromBook")]
     public async Task<IActionResult> RemovePublisherFromBook(string bookId, string publisherId)
     {

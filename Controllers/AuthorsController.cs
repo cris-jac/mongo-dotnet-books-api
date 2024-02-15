@@ -1,6 +1,7 @@
 using API.Interfaces;
 using API.Models;
 using API.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -8,6 +9,7 @@ using MongoDB.Driver;
 namespace API.DTO;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class AuthorsController : ControllerBase
 {
@@ -23,6 +25,7 @@ public class AuthorsController : ControllerBase
         _nationalityRepository = nationalityRepository;
     }
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> GetAllAuthors()
     {
@@ -63,6 +66,7 @@ public class AuthorsController : ControllerBase
         return Ok(authorsDto);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetAuthor(string id)
     {
@@ -84,6 +88,7 @@ public class AuthorsController : ControllerBase
         return Ok(authorDto);
     }
 
+    [AllowAnonymous]
     [HttpGet("GetByCountry")]
     public async Task<IActionResult> GetAuthorsByNationality(string nationalityId)
     {
@@ -117,6 +122,7 @@ public class AuthorsController : ControllerBase
         return Ok(authorsDto);
     }
 
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> AddAuthor(AddAuthorDto authorDto)
     {
@@ -132,6 +138,7 @@ public class AuthorsController : ControllerBase
         return Ok("Author added");
     }
 
+
     [HttpDelete]
     public async Task<IActionResult> RemoveAuthor(string id)
     {
@@ -146,6 +153,7 @@ public class AuthorsController : ControllerBase
         return Ok("Author deleted");
     }
 
+    [AllowAnonymous]
     [HttpPut]
     public async Task<IActionResult> UpdateAuthor(string id, UpdateAuthorDto authorDto)
     {
@@ -165,6 +173,7 @@ public class AuthorsController : ControllerBase
         return Ok("Author updated");
     }
 
+    [AllowAnonymous]
     [HttpPut("AddNationalityId")]
     public async Task<IActionResult> AddNationalityToAuthor(string authorId, string nationalityId)
     {

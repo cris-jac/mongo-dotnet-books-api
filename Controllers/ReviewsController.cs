@@ -1,6 +1,7 @@
 using API.DTO;
 using API.Interfaces;
 using API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -9,6 +10,7 @@ using MongoDB.Driver;
 namespace API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class ReviewsController : ControllerBase
 {
@@ -27,6 +29,7 @@ public class ReviewsController : ControllerBase
         _bookRepository = bookRepository;
     }
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> GetReviews()
     {
@@ -55,6 +58,7 @@ public class ReviewsController : ControllerBase
         return Ok(reviewsDto);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetReview(string id)
     {
@@ -78,6 +82,7 @@ public class ReviewsController : ControllerBase
         return Ok(reviewDto);
     }
 
+    [AllowAnonymous]
     [HttpGet("GetReviewsByBook")]
     public async Task<IActionResult> GetReviewsByBook(string bookId)
     {
@@ -106,6 +111,7 @@ public class ReviewsController : ControllerBase
         return Ok(reviewsDto);
     }
 
+    [AllowAnonymous]
     [HttpGet("GetReviewsByReader")]
     public async Task<IActionResult> GetReviewsByReader(string readerId)
     {
@@ -134,6 +140,7 @@ public class ReviewsController : ControllerBase
         return Ok(reviewsDto);
     }
 
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> AddReview([FromQuery] AddReviewDto reviewDto)
     {
@@ -151,6 +158,7 @@ public class ReviewsController : ControllerBase
         return Ok("Review added");
     }
 
+
     [HttpDelete]
     public async Task<IActionResult> DeleteReview(string reviewId)
     {
@@ -163,6 +171,7 @@ public class ReviewsController : ControllerBase
         return Ok("Review deleted");
     }
 
+    [AllowAnonymous]
     [HttpPut]
     public async Task<IActionResult> UpdateReview([FromQuery] string reviewId, [FromBody] UpdateReviewDto reviewDto)
     {

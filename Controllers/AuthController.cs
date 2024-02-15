@@ -4,6 +4,7 @@ using API.Interfaces;
 using API.Models;
 using API.Repositories;
 using API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
@@ -11,6 +12,7 @@ using MongoDB.Driver;
 namespace API.Controllers;
 
 [ApiController]
+[AllowAnonymous]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {

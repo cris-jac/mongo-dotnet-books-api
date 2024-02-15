@@ -75,9 +75,9 @@ public class Initializer
         {
             var initializeAuthors = new List<Author>
             {
-                new Author { Name = "Roberto Arlt", Bio = "Argentine writer known for his innovative and experimental works. His writing often explored themes of urban life, social inequality, and the human condition. Arlt's works are characterized by their raw, gritty realism and their portrayal of marginalized characters struggling to survive in the harsh realities of modern society.", NationalityId = ObjectId.Empty },
-                new Author { Name = "Franz Kafka", Bio = "German-speaking Bohemian, today Czech Republic, writer known for his surreal and existential works. Kafka's works are characterized by their dream-like quality, labyrinthine narratives, and exploration of the human psyche. Some of his most famous works include 'The Metamorphosis','The Trial', and 'The Castle', which have had a profound influence on modern literature and philosophy.", NationalityId = ObjectId.Empty },
-                new Author { Name = "George Orwell", Bio = "English writer known for his politically charged and dystopian works. His writing often critiqued totalitarianism, imperialism, and social injustice, drawing from his own experiences and observations. Some of his most famous works include 'Animal Farm' and 'Nineteen Eighty-Four', which have become seminal texts in the genre of dystopian literature and have had a lasting impact on popular culture.", NationalityId = ObjectId.Empty }
+                new Author { Name = "Roberto Arlt", Bio = "Escritor argentino conocido por sus obras innovadoras y experimentales. Sus escritos a menudo exploraban temas de la vida urbana, la desigualdad social y la condición humana. Las obras de Arlt se caracterizan por su realismo crudo y descarnado y su retrato de personajes marginados que luchan por sobrevivir en las duras realidades de la sociedad moderna.", NationalityId = ObjectId.Empty },
+                new Author { Name = "Franz Kafka", Bio = "Escritor bohemio conocido por sus obras surrealistas y existenciales. Las obras de Kafka se caracterizan por su calidad onírica, narrativas laberínticas y exploración de la psique humana. Algunas de sus obras más famosas incluyen 'La Metamorfosis', 'El Proceso' y 'El Castillo', que han tenido una profunda influencia en la literatura y la filosofía modernas.", NationalityId = ObjectId.Empty },
+                new Author { Name = "George Orwell", Bio = "Escritor inglés conocido por sus obras distópicas y con carga política. Sus escritos a menudo criticaban el totalitarismo, el imperialismo y la injusticia social, basándose en sus propias experiencias y observaciones. Algunas de sus obras más famosas incluyen 'Animal Farm' y '1984', que se han convertido en textos fundamentales en el género de la literatura distópica y han tenido un impacto duradero en la cultura popular.", NationalityId = ObjectId.Empty }
             };
 
             authorsCollection.InsertMany(initializeAuthors);
@@ -90,11 +90,54 @@ public class Initializer
             var initializeNationalities = new List<Nationality>
             {
                 new Nationality { Name = "Argentina" },
-                new Nationality { Name = "Great Britain" },
-                new Nationality { Name = "Czech Republic" }
+                new Nationality { Name = "Gran Bretaña" },
+                new Nationality { Name = "República Checa" }
             };
 
             nationalitiesCollection.InsertMany(initializeNationalities);
+        }
+
+        // Publishers
+        var publishersCollection = _database.GetCollection<Publisher>(_settings.PublisherCollectionName);
+        if (publishersCollection.CountDocuments(FilterDefinition<Publisher>.Empty) == 0)
+        {
+            var initializePublishers = new List<Publisher>
+            {
+                new Publisher { Name = "Penguin" },
+                new Publisher { Name = "Planeta" },
+                new Publisher { Name = "Alfaguara" },
+            };
+
+            publishersCollection.InsertMany(initializePublishers);
+        }
+
+        // Categories
+        var categoriesCollection = _database.GetCollection<Category>(_settings.CategoryCollectionName);
+        if (categoriesCollection.CountDocuments(FilterDefinition<Category>.Empty) == 0)
+        {
+            var initializeCategories = new List<Category>
+            {
+                new Category { Name = "Alegoría" },
+                new Category { Name = "Sátira" },
+                new Category { Name = "Política" },
+                new Category { Name = "Psicológica" },
+            };
+
+            categoriesCollection.InsertMany(initializeCategories);
+        }
+
+        // Readers
+        var readersCollection = _database.GetCollection<Reader>(_settings.ReaderCollectionName);
+        if (readersCollection.CountDocuments(FilterDefinition<Reader>.Empty) == 0)
+        {
+            var initializeReaders = new List<Reader>
+            {
+                new Reader { Name = "Pepe Argento", Username = "pepe123", BookIds = new List<ObjectId>(), NationalityId = ObjectId.Empty },
+                new Reader { Name = "Mario Santos", Username = "santos123", BookIds = new List<ObjectId>(), NationalityId = ObjectId.Empty },
+                new Reader { Name = "Fatiga Argento", Username = "fatiga666", BookIds = new List<ObjectId>(), NationalityId = ObjectId.Empty }
+            };
+
+            readersCollection.InsertMany(initializeReaders);
         }
     }
 }

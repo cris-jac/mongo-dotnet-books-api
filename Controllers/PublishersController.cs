@@ -1,11 +1,13 @@
 using API.DTO;
 using API.Interfaces;
 using API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class PublishersController : ControllerBase
 {
@@ -18,7 +20,7 @@ public class PublishersController : ControllerBase
         _publisherRepository = publisherRepository;
     }
     
-
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> GetAllPublishers()
     {
@@ -29,6 +31,7 @@ public class PublishersController : ControllerBase
         return Ok(publishers);
     }
 
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> AddPublisher(AddPublisherDto publisherDto)
     {
@@ -41,6 +44,7 @@ public class PublishersController : ControllerBase
 
         return Ok("Publisher added");
     }
+
 
     [HttpDelete]
     public async Task<IActionResult> DeletePublisher(string id)

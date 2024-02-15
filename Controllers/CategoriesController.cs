@@ -1,11 +1,13 @@
 using API.DTO;
 using API.Interfaces;
 using API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class CategoriesController : ControllerBase
 {
@@ -16,6 +18,7 @@ public class CategoriesController : ControllerBase
         _categoryRepository = categoryRepository;
     }
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> GetAllCategories()
     {
@@ -26,6 +29,7 @@ public class CategoriesController : ControllerBase
         return Ok(categories);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetCategory(string id)
     {
@@ -36,6 +40,7 @@ public class CategoriesController : ControllerBase
         return Ok(category);
     }
 
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> AddCategory(AddCategoryDto categoryDto)
     {
@@ -48,6 +53,7 @@ public class CategoriesController : ControllerBase
 
         return Ok("Category added");
     }
+
 
     [HttpDelete]
     public async Task<IActionResult> DeleteCategory(string id)

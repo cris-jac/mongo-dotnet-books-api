@@ -1,12 +1,14 @@
 using API.DTO;
 using API.Interfaces;
 using API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 
 namespace  API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class ReadersController : ControllerBase
 {
@@ -25,6 +27,7 @@ public class ReadersController : ControllerBase
         _nationalityRepository = nationalityRepository;
     }
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> GetAllReaders()
     {
@@ -61,6 +64,7 @@ public class ReadersController : ControllerBase
         return Ok(readersDto);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetReader(string id)
     {
@@ -90,6 +94,7 @@ public class ReadersController : ControllerBase
         return Ok(readerDto);
     }
 
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> AddReader(AddReaderDto readerDto)
     {
@@ -106,6 +111,7 @@ public class ReadersController : ControllerBase
         return Ok("Reader added");
     }
 
+    [AllowAnonymous]
     [HttpGet("GetReaderBooks")]
     public async Task<IActionResult> GetBooksFromReader(string readerId)
     {
@@ -181,6 +187,7 @@ public class ReadersController : ControllerBase
     //     return NoContent();
     // }
 
+    [AllowAnonymous]
     [HttpPut("AddBookToReader")]
     public async Task<IActionResult> AddBookToReader(string readerId, string bookId)
     {
@@ -196,6 +203,7 @@ public class ReadersController : ControllerBase
         return Ok("Reader's list of books was updated");
     }
 
+    [AllowAnonymous]
     [HttpPut("RemoveBookFromReader")]
     public async Task<IActionResult> RemoveBookFromReader(string readerId, string bookId)
     {
@@ -211,6 +219,7 @@ public class ReadersController : ControllerBase
         return Ok("Reader's list of books was updated");
     }
 
+    [AllowAnonymous]
     [HttpPut("UpdateNationality")]
     public async Task<IActionResult> UpdateNationalityToReader(string readerId, string nationalityId)
     {

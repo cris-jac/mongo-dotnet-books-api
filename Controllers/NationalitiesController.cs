@@ -1,11 +1,13 @@
 using API.DTO;
 using API.Interfaces;
 using API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class NationalitiesController : ControllerBase
 {
@@ -16,6 +18,7 @@ public class NationalitiesController : ControllerBase
         _nationalityRepository = nationalityRepository;
     }
     
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> GetAllNationalities()
     {
@@ -26,6 +29,7 @@ public class NationalitiesController : ControllerBase
         return Ok(nationalities);
     }
 
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetNationality(string id)
     {
@@ -37,6 +41,7 @@ public class NationalitiesController : ControllerBase
     }
 
     // Issues when passing empty data
+    [AllowAnonymous]
     [HttpGet("GetByName")]
     public async Task<IActionResult> GetNationalityByName(string name)
     {
@@ -49,6 +54,7 @@ public class NationalitiesController : ControllerBase
         return Ok(nation);  
     }
 
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> AddNationality(AddNationalityDto nationalityDto)
     {
@@ -61,6 +67,7 @@ public class NationalitiesController : ControllerBase
 
         return Ok("Nationality added");
     }    
+
 
     [HttpDelete]
     public async Task<IActionResult> DeleteNationality(string id)
@@ -75,6 +82,4 @@ public class NationalitiesController : ControllerBase
 
         return Ok("Nationality removed");
     }
-
-    
 }
