@@ -27,6 +27,7 @@ public class CategoriesController : ControllerBase
         if (categories == null) return NotFound();
 
         return Ok(categories);
+        // throw new Exception();
     }
 
     [AllowAnonymous]
@@ -35,16 +36,25 @@ public class CategoriesController : ControllerBase
     {
         var category = await _categoryRepository.GetCategoryById(id);
 
-        if (category == null) return NotFound("Category with this id not found");
+        // if (category == null) return NotFound("Category with this id not found");
+        if (category == null) { throw new KeyNotFoundException("Category"); }
 
-        return Ok(category);
+        // return Ok(category);
+        var response = new ApiResponse
+        {
+            Result = category,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> AddCategory(AddCategoryDto categoryDto)
     {
-        Category newCategory = new Category 
+        Category newCategory = new Category
         {
             Name = categoryDto.Name
         };

@@ -1,6 +1,7 @@
 using System.Text;
 using API.Configurations;
 using API.Interfaces;
+using API.Middleware;
 using API.Repositories;
 using API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -13,6 +14,10 @@ using SharpCompress.Readers;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+// Exception hnadling
+builder.Services.AddTransient<ExceptionMiddleware>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -24,8 +29,8 @@ builder.Services.AddSwaggerGen(options =>
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
         Scheme = JwtBearerDefaults.AuthenticationScheme,
-        Description = 
-            "Enter 'Bearer' [space] followeed by your token in the input below \r\n\r\n"+
+        Description =
+            "Enter 'Bearer' [space] followeed by your token in the input below \r\n\r\n" +
             "Example: \"Bearer uird8y3nfd0s...\"",
         Reference = new OpenApiReference
         {
@@ -39,7 +44,7 @@ builder.Services.AddSwaggerGen(options =>
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
-            jwtSecurityScheme, 
+            jwtSecurityScheme,
             new List<string>()
         }
     });
@@ -50,13 +55,13 @@ builder.Services.Configure<DatabaseSettings>(
     builder.Configuration.GetSection("MongoDatabase")
 );
 
-builder.Services.AddSingleton<IMongoClient>(sp => 
+builder.Services.AddSingleton<IMongoClient>(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<DatabaseSettings>>().Value;
     return new MongoClient(settings.ConnectionString);
 });
 
-builder.Services.AddScoped<IMongoDatabase>(sp => 
+builder.Services.AddScoped<IMongoDatabase>(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<DatabaseSettings>>().Value;
     var client = sp.GetRequiredService<IMongoClient>();
@@ -86,7 +91,7 @@ builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
 
 // Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options => 
+    .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -121,6 +126,9 @@ using (var scope = app.Services.CreateScope())
     initializer.InitializeCollections();
 }
 
+// Exceptions handling
+app.UseMiddleware<ExceptionMiddleware>();
+
 // Controllers
 app.MapControllers();
 
@@ -128,7 +136,7 @@ app.MapControllers();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();  // Use for http -> https
 
 
 // var summaries = new[]

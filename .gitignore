@@ -485,3 +485,6 @@ $RECYCLE.BIN/
 .dockerignore
 docker-compose.yaml
 Dockerfile
+
+# sonarqube
+.sonarqube
