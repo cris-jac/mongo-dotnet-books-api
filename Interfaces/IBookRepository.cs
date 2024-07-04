@@ -18,11 +18,8 @@ public interface IBookRepository
 
     // Updates
     Task<bool> AddRemoveAuthorToBook(string bookId, string authorId);
-    // Task<bool> RemoveAuthorFromBook(string bookId, string authorId);
-    Task<bool> AddCategoryToBook(string bookId, string categoryId);
-    Task<bool> RemoveCategoryFromBook(string bookId, string categoryId);
-    Task<bool> AddPublisherToBook(string bookId, string publisherId);
-    Task<bool> RemovePublisherFromBook(string bookId, string publisherId);
+    Task<bool> AddRemoveCategoryToBook(string bookId, string categoryId);
+    Task<bool> AddRemovePublisherToBook(string bookId, string publisherId);
 
     //
     Task<List<string>> GetBooksByIds(List<string> booksIds);

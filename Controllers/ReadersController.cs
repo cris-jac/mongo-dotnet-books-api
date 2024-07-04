@@ -1,11 +1,12 @@
 using API.DTO;
 using API.Interfaces;
 using API.Models;
+using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 
-namespace  API.Controllers;
+namespace API.Controllers;
 
 [ApiController]
 [Authorize]
@@ -15,16 +16,19 @@ public class ReadersController : ControllerBase
     private readonly IReaderRepository _readerRepository;
     private readonly IBookRepository _bookRepository;
     private readonly INationalityRepository _nationalityRepository;
+    private readonly ReaderService _readerService;
 
     public ReadersController(
         IReaderRepository readerRepository,
         IBookRepository bookRepository,
-        INationalityRepository nationalityRepository
+        INationalityRepository nationalityRepository,
+        ReaderService readerService
     )
     {
         _readerRepository = readerRepository;
         _bookRepository = bookRepository;
         _nationalityRepository = nationalityRepository;
+        _readerService = readerService;
     }
 
     [AllowAnonymous]
@@ -33,35 +37,18 @@ public class ReadersController : ControllerBase
     {
         var readers = await _readerRepository.GetAllAsync();
 
-        if (readers ==  null)
+        if (readers == null) { throw new KeyNotFoundException("Readers"); }
+
+        var readersDto = await _readerService.MapReaders(readers);
+
+        var response = new ApiResponse
         {
-            return NotFound("No readers yet");
-        }
-
-        // List of reades
-        var readersDto = new List<GetReaderDto>();
-
-        foreach (var reader in readers)
-        {
-            // get nationality name
-            var nationality = await _nationalityRepository.GetNationalityById(reader.NationalityId.ToString());
-
-            // get books names
-            List<string> booksStringIds = reader.BookIds.ConvertAll(id => id.ToString());
-            List<string> books = await _bookRepository.GetBooksByIds(booksStringIds);
-
-            // map
-            readersDto.Add(new GetReaderDto
-            {
-                Id = reader.Id,
-                Name = reader.Name,
-                Username = reader.Username,
-                Nationality = nationality?.Name ?? "",
-                Books = books ?? new List<string>()
-            });  
-        }
-
-        return Ok(readersDto);
+            Result = readersDto,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
@@ -69,10 +56,7 @@ public class ReadersController : ControllerBase
     public async Task<IActionResult> GetReader(string id)
     {
         var reader = await _readerRepository.GetReaderById(id);
-        if (reader == null)
-        {
-            return NotFound("No reader with this id");
-        }
+        if (reader == null) { throw new KeyNotFoundException("Reader"); }
 
         // get nationality name
         var nationality = await _nationalityRepository.GetNationalityById(reader.NationalityId.ToString());
@@ -91,7 +75,14 @@ public class ReadersController : ControllerBase
             Books = books ?? new List<string>()
         };
 
-        return Ok(readerDto);
+        var response = new ApiResponse
+        {
+            Result = readerDto,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
@@ -108,12 +99,19 @@ public class ReadersController : ControllerBase
 
         await _readerRepository.AddReader(newReader);
 
-        return Ok("Reader added");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
-    [HttpGet("GetReaderBooks")]
-    public async Task<IActionResult> GetBooksFromReader(string readerId)
+    [HttpGet("reader/{readerId}")]
+    public async Task<IActionResult> GetBooksFromReader([FromRoute] string readerId)
     {
         var reader = await _readerRepository.GetReaderById(readerId);
 
@@ -124,7 +122,7 @@ public class ReadersController : ControllerBase
         List<GetReaderBookDto> books = new List<GetReaderBookDto>();
 
         // Get the book and add it to the list
-        foreach (var bookId in bookIds) 
+        foreach (var bookId in bookIds)
         {
             // bookId = bookId.ToString();
             var book = await _bookRepository.GetBookById(bookId);
@@ -135,103 +133,59 @@ public class ReadersController : ControllerBase
             });
         }
 
-        return Ok(books);
+        var response = new ApiResponse
+        {
+            Result = books,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
-    // [HttpPost]
-    // public async Task<IActionResult> AddBookToList(string readerId, string bookId)
-    // {
-    //     Reader reader = await _readerRepository.GetReaderById(readerId);
-
-    //     if (reader == null)
-    //     {
-    //         return NotFound("No reader with this Id");
-    //     }
-
-    //     // Check if the book exists
-    //     var bookExists = await _bookRepository.BookExists(bookId);
-
-    //     if (!bookExists) 
-    //     {
-    //         return NotFound("The book id does not exists");
-    //     } 
-
-    //     // Add the bookId
-    //     ObjectId bookObjectId = ObjectId.Parse(bookId);
-    //     reader.BookIds.Add(bookObjectId);
-
-    //     return Created();
-    // }
-
-
-    // [HttpDelete]
-    // public async Task<IActionResult> RemoveBookFromList(string readerId, string bookId)
-    // {
-    //     Reader reader = await _readerRepository.GetReaderById(readerId);
-
-    //     if (reader == null) 
-    //     { 
-    //         return NotFound("Reader does not exists");
-    //     }
-
-    //     ObjectId bookObjectId = ObjectId.Parse(bookId);
-    //     bool readerHasBook = reader.BookIds.Contains(bookObjectId);
-
-    //     if (!readerHasBook)
-    //     {
-    //         return NotFound("User does not have this book");
-    //     }
-
-    //     reader.BookIds.Remove(bookObjectId);
-
-    //     return NoContent();
-    // }
-
     [AllowAnonymous]
-    [HttpPut("AddBookToReader")]
-    public async Task<IActionResult> AddBookToReader(string readerId, string bookId)
+    [HttpPut("{readerId}/book/{bookId}")]
+    public async Task<IActionResult> AddBookToReader([FromRoute] string readerId, [FromRoute] string bookId)
     {
         var readerExists = await _readerRepository.ReaderExists(readerId);
-        if (!readerExists) return NotFound("Reader with this Id not found");
+        if (!readerExists) { throw new KeyNotFoundException("Reader"); }
 
         var bookExists = await _bookRepository.BookExists(bookId);
-        if (!bookExists) return NotFound("Book with this Id not found");
+        if (!bookExists) { throw new KeyNotFoundException("Book"); }
 
-        var bookAddedToReader = await _readerRepository.AddBookToList(readerId, bookId);
-        if (!bookAddedToReader) return BadRequest("Error while adding book to reader");
+        var bookAddedToReader = await _readerRepository.AddRemoveBookToList(readerId, bookId);
+        if (!bookAddedToReader) { throw new BadHttpRequestException("Could not update reader"); }
 
-        return Ok("Reader's list of books was updated");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
-    [HttpPut("RemoveBookFromReader")]
-    public async Task<IActionResult> RemoveBookFromReader(string readerId, string bookId)
+    [HttpPut("{readerId}/nationality/{nationalityId}")]
+    public async Task<IActionResult> UpdateNationalityToReader([FromRoute] string readerId, [FromRoute] string nationalityId)
     {
         var readerExists = await _readerRepository.ReaderExists(readerId);
-        if (!readerExists) return NotFound("Reader with this Id not found");
-
-        var bookExists = await _bookRepository.BookExists(bookId);
-        if (!bookExists) return NotFound("Book with this Id not found");
-
-        var bookRemovedFromReader = await _readerRepository.RemoveBookFromList(readerId, bookId);
-        if (!bookRemovedFromReader) return BadRequest("Error while removing book to reader");
-
-        return Ok("Reader's list of books was updated");
-    }
-
-    [AllowAnonymous]
-    [HttpPut("UpdateNationality")]
-    public async Task<IActionResult> UpdateNationalityToReader(string readerId, string nationalityId)
-    {
-        var readerExists = await _readerRepository.ReaderExists(readerId);
-        if (!readerExists) return NotFound("Reader with this Id was not found");
+        if (!readerExists) { throw new KeyNotFoundException("Reader"); }
 
         var nationalityExists = await _nationalityRepository.NationalityExists(nationalityId);
-        if (!nationalityExists) return NotFound("Nationality with this Id was not found");
+        if (!nationalityExists) { throw new KeyNotFoundException("Nationality"); }
 
         var nationalityUpdated = await _readerRepository.UpdateReaderNationality(readerId, nationalityId);
-        if (!nationalityUpdated) return BadRequest("Error while updating nationality");
+        if (!nationalityUpdated) { throw new KeyNotFoundException("Could not update reader"); }
 
-        return Ok("Reader's nationality updated");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 }

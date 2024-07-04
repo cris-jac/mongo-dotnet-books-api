@@ -76,7 +76,7 @@ public class CategoriesController : ControllerBase
     }
 
 
-    [HttpDelete]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCategory(string id)
     {
         var categoryExists = await _categoryRepository.CategoryExists(id);

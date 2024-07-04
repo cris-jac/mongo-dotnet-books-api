@@ -34,16 +34,16 @@ public class ReviewsController : ControllerBase
     public async Task<IActionResult> GetReviews()
     {
         var reviews = await _reviewRepository.GetReviews();
-        if (reviews == null) return NotFound(":/");
-        
+        if (reviews == null) { throw new KeyNotFoundException("Reviews"); }
+
         List<GetReviewDto> reviewsDto = new List<GetReviewDto>();
 
         foreach (var review in reviews)
         {
             var reader = await _readerRepository.GetReaderById(review.ReaderId.ToString());
-        
+
             var book = await _bookRepository.GetBookById(review.BookId.ToString());
-            
+
             reviewsDto.Add(new GetReviewDto
             {
                 Id = review.Id,
@@ -55,7 +55,14 @@ public class ReviewsController : ControllerBase
             });
         }
 
-        return Ok(reviewsDto);
+        var response = new ApiResponse
+        {
+            Result = reviewsDto,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
@@ -63,12 +70,12 @@ public class ReviewsController : ControllerBase
     public async Task<IActionResult> GetReview(string id)
     {
         var review = await _reviewRepository.GetReview(id);
-        if (review == null) return NotFound();
+        if (review == null) { throw new KeyNotFoundException("Review"); }
 
         var reader = await _readerRepository.GetReaderById(review.ReaderId.ToString());
-        
+
         var book = await _bookRepository.GetBookById(review.BookId.ToString());
-        
+
         var reviewDto = new GetReviewDto
         {
             Id = review.Id,
@@ -79,24 +86,31 @@ public class ReviewsController : ControllerBase
             Rating = review.Rating
         };
 
-        return Ok(reviewDto);
+        var response = new ApiResponse
+        {
+            Result = reviewDto,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
-    [HttpGet("GetReviewsByBook")]
-    public async Task<IActionResult> GetReviewsByBook(string bookId)
+    [HttpGet("book/{bookId}")]
+    public async Task<IActionResult> GetReviewsByBook([FromRoute] string bookId)
     {
         var reviews = await _reviewRepository.GetReviewsByBook(bookId);
-        if (reviews == null) return NotFound("There are no reviews for this book");
+        if (reviews == null) { throw new KeyNotFoundException("Reviews"); }
 
         var reviewsDto = new List<GetReviewDto>();
 
         foreach (var review in reviews)
         {
             var reader = await _readerRepository.GetReaderById(review.ReaderId.ToString());
-        
+
             var book = await _bookRepository.GetBookById(review.BookId.ToString());
-            
+
             reviewsDto.Add(new GetReviewDto
             {
                 Id = review.Id,
@@ -108,24 +122,31 @@ public class ReviewsController : ControllerBase
             });
         }
 
-        return Ok(reviewsDto);
+        var response = new ApiResponse
+        {
+            Result = reviewsDto,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
-    [HttpGet("GetReviewsByReader")]
-    public async Task<IActionResult> GetReviewsByReader(string readerId)
+    [HttpGet("reader/{readerId}")]
+    public async Task<IActionResult> GetReviewsByReader([FromRoute] string readerId)
     {
         var reviews = await _reviewRepository.GetReviewsByReader(readerId);
-        if (reviews == null) return NotFound();
+        if (reviews == null) { throw new KeyNotFoundException("Reviews"); }
 
         var reviewsDto = new List<GetReviewDto>();
 
         foreach (var review in reviews)
         {
             var reader = await _readerRepository.GetReaderById(review.ReaderId.ToString());
-        
+
             var book = await _bookRepository.GetBookById(review.BookId.ToString());
-            
+
             reviewsDto.Add(new GetReviewDto
             {
                 Id = review.Id,
@@ -137,7 +158,14 @@ public class ReviewsController : ControllerBase
             });
         }
 
-        return Ok(reviewsDto);
+        var response = new ApiResponse
+        {
+            Result = reviewsDto,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
@@ -155,7 +183,14 @@ public class ReviewsController : ControllerBase
 
         await _reviewRepository.AddReview(review);
 
-        return Ok("Review added");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status201Created,
+            Error = null
+        };
+        return Ok(response);
     }
 
 
@@ -163,12 +198,19 @@ public class ReviewsController : ControllerBase
     public async Task<IActionResult> DeleteReview(string reviewId)
     {
         var reviewExists = await _reviewRepository.ReviewExists(reviewId);
-        if (!reviewExists) return NotFound("There are no reviews with this Id");
+        if (!reviewExists) { throw new KeyNotFoundException("Review"); }
 
         var deleted = await _reviewRepository.DeleteReview(reviewId);
-        if (!deleted) return NotFound("Error while deleting review");
+        if (!deleted) { throw new BadHttpRequestException("Could not delete review"); }
 
-        return Ok("Review deleted");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
@@ -176,7 +218,7 @@ public class ReviewsController : ControllerBase
     public async Task<IActionResult> UpdateReview([FromQuery] string reviewId, [FromBody] UpdateReviewDto reviewDto)
     {
         var reviewExists = await _reviewRepository.ReviewExists(reviewId);
-        if (!reviewExists) return NotFound("There are no reviews with this Id");
+        if (!reviewExists) { throw new KeyNotFoundException("Review"); }
 
         var review = await _reviewRepository.GetReview(reviewId);
 
@@ -191,8 +233,15 @@ public class ReviewsController : ControllerBase
         };
 
         var updateResult = await _reviewRepository.UpdateReview(reviewId, updatedReview);
-        if (!updateResult) return BadRequest("Error while updating the review");
+        if (!updateResult) { throw new BadHttpRequestException("Could not update review"); }
 
-        return Ok("Review updated"); 
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 }

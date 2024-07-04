@@ -17,16 +17,23 @@ public class NationalitiesController : ControllerBase
     {
         _nationalityRepository = nationalityRepository;
     }
-    
+
     [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> GetAllNationalities()
     {
         var nationalities = await _nationalityRepository.GetAllNationalities();
 
-        if (nationalities == null) return NotFound();
+        if (nationalities == null) { throw new KeyNotFoundException("Nationalities"); }
 
-        return Ok(nationalities);
+        var response = new ApiResponse
+        {
+            Result = nationalities,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
@@ -35,51 +42,79 @@ public class NationalitiesController : ControllerBase
     {
         var nationality = await _nationalityRepository.GetNationalityById(id);
 
-        if (nationality == null) return NotFound("No nationalitywith this id");
+        if (nationality == null) { throw new KeyNotFoundException("Nationality"); }
 
-        return Ok(nationality);
+        var response = new ApiResponse
+        {
+            Result = nationality,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     // Issues when passing empty data
     [AllowAnonymous]
-    [HttpGet("GetByName")]
+    [HttpGet("name/{name}")]
     public async Task<IActionResult> GetNationalityByName(string name)
     {
-        if (string.IsNullOrEmpty(name)) return BadRequest("You should insert a nationality");
+        if (string.IsNullOrEmpty(name)) { throw new BadHttpRequestException("Invalid input"); }
 
         var nation = await _nationalityRepository.GetNationalityByName(name);
 
-        if (nation == null) return BadRequest();
+        if (nation == null) { throw new KeyNotFoundException("Nationality"); }
 
-        return Ok(nation);  
+        var response = new ApiResponse
+        {
+            Result = nation,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> AddNationality(AddNationalityDto nationalityDto)
     {
-        Nationality newNationality = new Nationality 
+        Nationality newNationality = new Nationality
         {
             Name = nationalityDto.Name
         };
 
         await _nationalityRepository.AddNationality(newNationality);
 
-        return Ok("Nationality added");
-    }    
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status201Created,
+            Error = null
+        };
+        return Ok(response);
+    }
 
 
-    [HttpDelete]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteNationality(string id)
     {
         var nationalityExists = await _nationalityRepository.NationalityExists(id);
 
-        if (!nationalityExists) return BadRequest("Nationality with this id does not exist");
+        if (!nationalityExists) { throw new KeyNotFoundException("Nationality"); }
 
         var deleteResult = await _nationalityRepository.RemoveNationality(id);
 
-        if (!deleteResult) return BadRequest("Error while deleting the nationality");
+        if (!deleteResult) { throw new KeyNotFoundException("Could not delete nationality"); }
 
-        return Ok("Nationality removed");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 }

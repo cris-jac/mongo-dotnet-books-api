@@ -11,7 +11,7 @@ public interface IReaderRepository
     Task<bool> ReaderExists(string id);
     Task AddReader(Reader reader);
     // Task<IEnumerable<ObjectId>> GetBooksFromReader(string readerId);
-    Task<bool> AddBookToList(string readerId, string bookId);
-    Task<bool> RemoveBookFromList(string readerId, string bookId);
+    Task<bool> AddRemoveBookToList(string readerId, string bookId);
+    // Task<bool> RemoveBookFromList(string readerId, string bookId);
     Task<bool> UpdateReaderNationality(string readerId, string nationalityId);
 }

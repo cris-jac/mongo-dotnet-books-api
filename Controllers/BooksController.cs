@@ -44,29 +44,6 @@ public class BooksController : ControllerBase
 
         if (books == null) { throw new KeyNotFoundException("Books"); }
 
-        // var booksDto = new List<GetBookDto>();
-        // foreach (var book in books)
-        // {
-        //     // Parse authors Ids to strings
-        //     List<string> authorsStringIds = book.AuthorIds.ConvertAll(id => id.ToString());
-        //     var authors = await _authorRepository.GetAuthorsByIds(authorsStringIds);
-        //     // Parse categories Ids to strings
-        //     List<string> categoriesStringIds = book.CategoryIds.ConvertAll(id => id.ToString());
-        //     var categories = await _categoryRepository.GetCategoriesByIds(categoriesStringIds);
-        //     // Parse publishers
-        //     List<string> publishersStringIds = book.PublisherIds.ConvertAll(id => id.ToString());
-        //     var publishers = await _publisherRepository.GetPublishersbyIds(publishersStringIds);
-        //     // Response Dto
-        //     booksDto.Add(new GetBookDto
-        //     {
-        //         Id = book.Id,
-        //         Title = book.Title,
-        //         Description = book.Description,
-        //         Authors = authors ?? new List<string>(),
-        //         Categories = categories ?? new List<string>(),
-        //         Publishers = publishers ?? new List<string>()
-        //     });
-        // }
         var booksDto = await _bookService.MapBooks(books);
 
         var response = new ApiResponse
@@ -81,9 +58,8 @@ public class BooksController : ControllerBase
 
     [AllowAnonymous]
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetBook(string id)
+    public async Task<IActionResult> GetBook([FromRoute] string id)
     {
-        // var book = await _bookRepository.Find(b => b.Id == id).FirstOrDefaultAsync();
         var book = await _bookRepository.GetBookById(id);
 
         if (book == null) { throw new KeyNotFoundException("Book"); }
@@ -122,8 +98,8 @@ public class BooksController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpGet("GetByAuthor")]
-    public async Task<IActionResult> GetBooksByAuthor(string authorId)
+    [HttpGet("author/{authorId}")]
+    public async Task<IActionResult> GetBooksByAuthor([FromRoute] string authorId)
     {
         // Check if author exists
         var authorExists = await _authorRepository.AuthorExists(authorId);
@@ -200,16 +176,16 @@ public class BooksController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpGet("GetByPublisher")]
-    public async Task<IActionResult> GetBooksByPublisher(string publisherId)
+    [HttpGet("publisher/{publisherId}")]
+    public async Task<IActionResult> GetBooksByPublisher([FromRoute] string publisherId)
     {
         // Check if author exists
         var publisherExists = await _publisherRepository.PublisherExists(publisherId);
-        if (!publisherExists) return NotFound("Publisher with this Id does not exist");
+        if (!publisherExists) { throw new KeyNotFoundException("Publisher"); }
 
         // Check if book exists
         var books = await _bookRepository.GetBooksByPublisher(publisherId);
-        if (books == null) return NotFound("Error: Not found");
+        if (books == null) { throw new KeyNotFoundException("Book"); }
 
         // Check if there are no books
         if (books.Count() == 0)
@@ -254,30 +230,41 @@ public class BooksController : ControllerBase
             PublicationDate = new DateTime(bookDto.PublicationYear, 1, 1)
         };
 
-        // await _bookRepository.InsertOneAsync(newBook);
         await _bookRepository.AddAsync(newBook);
 
-        return Ok(newBook);
+        var response = new ApiResponse
+        {
+            Result = newBook,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status201Created,
+            Error = null
+        };
+        return Ok(response);
     }
 
-    [HttpDelete]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> RemoveBook(string bookId)
     {
-        // Book bookToDelete = await _bookRepository.Find(b => b.Id == bookId).FirstOrDefaultAsync();
         bool bookExists = await _bookRepository.BookExists(bookId);
-        if (!bookExists) return NotFound();
+        if (!bookExists) { throw new KeyNotFoundException("Book"); }
 
-        // var deleteResult = await _bookRepository.DeleteOneAsync(b => b.Id == bookId);
         bool deleteResult = await _bookRepository.RemoveAsync(bookId);
-        if (!deleteResult) return BadRequest("Not deleted");
+        if (!deleteResult) { throw new BadHttpRequestException("Could not delete book"); }
 
-        return Ok("Book deleted");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
 
     // Book - Author
     [AllowAnonymous]
-    [HttpPut("{bookId}/{authorId}")]
+    [HttpPut("{bookId}/author/{authorId}")]
     public async Task<IActionResult> AddRemoveAuthorToBook([FromRoute] string bookId, [FromRoute] string authorId)
     {
         var bookExists = await _bookRepository.BookExists(bookId);
@@ -299,87 +286,52 @@ public class BooksController : ControllerBase
         return Ok(response);
     }
 
-    // [AllowAnonymous]
-    // [HttpPut("RemoveAuthorFromBook")]
-    // public async Task<IActionResult> RemoveAuthorFromBook(string bookId, string authorId)
-    // {
-    //     var bookExists = await _bookRepository.BookExists(bookId);
-    //     if (!bookExists) return NotFound("There is no book with this Id");
-
-    //     var authorExists = await _authorRepository.AuthorExists(authorId);
-    //     if (!authorExists) return NotFound("There is no author with this Id");
-
-    //     var authorRemovedFromBook = await _bookRepository.RemoveAuthorFromBook(bookId, authorId);
-    //     if (!authorRemovedFromBook) return BadRequest("Error removing author from book");
-
-    //     return Ok("Book's author updated");
-    // }
-
     // Book - Category
     [AllowAnonymous]
-    [HttpPut("AddCategoryToBook")]
-    public async Task<IActionResult> AddCategoryToBook(string bookId, string categoryId)
+    [HttpPut("{bookId}/category/{categoryId}")]
+    public async Task<IActionResult> AddRemoveCategoryToBook([FromRoute] string bookId, [FromRoute] string categoryId)
     {
         var bookExists = await _bookRepository.BookExists(bookId);
-        if (!bookExists) return NotFound("There is no book with this Id");
+        if (!bookExists) { throw new KeyNotFoundException("Book"); }
 
         var categoryExists = await _categoryRepository.CategoryExists(categoryId);
-        if (!categoryExists) return NotFound("There is no category with this Id");
+        if (!categoryExists) { throw new KeyNotFoundException("Category"); }
 
-        var categoryAddedToBook = await _bookRepository.AddCategoryToBook(bookId, categoryId);
-        if (!categoryAddedToBook) return BadRequest("Error adding category to book");
+        var categoryAddedToBook = await _bookRepository.AddRemoveCategoryToBook(bookId, categoryId);
+        if (!categoryAddedToBook) { throw new BadHttpRequestException("Could not update the book"); }
 
-        return Ok("Book's categories updated");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
-
-    [AllowAnonymous]
-    [HttpPut("RemoveCategoryFromBook")]
-    public async Task<IActionResult> RemoveCategoryFromBook(string bookId, string categoryId)
-    {
-        var bookExists = await _bookRepository.BookExists(bookId);
-        if (!bookExists) return NotFound("There is no book with this Id");
-
-        var categoryExists = await _categoryRepository.CategoryExists(categoryId);
-        if (!categoryExists) return NotFound("There is no category with this Id");
-
-        var categoryRemovedFromBook = await _bookRepository.RemoveCategoryFromBook(bookId, categoryId);
-        if (!categoryRemovedFromBook) return BadRequest("Error removing category from book");
-
-        return Ok("Book's categories updated");
-    }
-
 
     // Book - Publisher
     [AllowAnonymous]
-    [HttpPut("AddPublisherToBook")]
-    public async Task<IActionResult> AddPublisherToBook(string bookId, string publisherId)
+    [HttpPut("{bookId}/publisher/{publisherId}")]
+    public async Task<IActionResult> AddPublisherToBook([FromRoute] string bookId, [FromRoute] string publisherId)
     {
         var bookExists = await _bookRepository.BookExists(bookId);
-        if (!bookExists) return NotFound("There is no book with this Id");
+        if (!bookExists) { throw new KeyNotFoundException("Book"); }
 
         var publisherExists = await _publisherRepository.PublisherExists(publisherId);
-        if (!publisherExists) return NotFound("There is no publisher with this Id");
+        if (!publisherExists) { throw new KeyNotFoundException("Publisher"); }
 
-        var publisherAddedToBook = await _bookRepository.AddPublisherToBook(bookId, publisherId);
-        if (!publisherAddedToBook) return BadRequest("Error adding publisher to book");
+        var publisherAddedToBook = await _bookRepository.AddRemovePublisherToBook(bookId, publisherId);
+        if (!publisherAddedToBook) { throw new BadHttpRequestException("Could not update the book"); }
 
-        return Ok("Book's publishers updated");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
-    [AllowAnonymous]
-    [HttpPut("RemovePublisherFromBook")]
-    public async Task<IActionResult> RemovePublisherFromBook(string bookId, string publisherId)
-    {
-        var bookExists = await _bookRepository.BookExists(bookId);
-        if (!bookExists) return NotFound("There is no book with this Id");
-
-        // var categoryExists = await _categoryRepository.CategoryExists(categoryId);
-        var publisherExists = await _publisherRepository.PublisherExists(publisherId);
-        if (!publisherExists) return NotFound("There is no publisher with this Id");
-
-        var publisherRemovedFromBook = await _bookRepository.RemovePublisherFromBook(bookId, publisherId);
-        if (!publisherRemovedFromBook) return BadRequest("Error removing publisher from book");
-
-        return Ok("Book's publishers updated");
-    }
 }

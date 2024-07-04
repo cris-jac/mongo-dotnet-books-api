@@ -19,16 +19,23 @@ public class PublishersController : ControllerBase
     {
         _publisherRepository = publisherRepository;
     }
-    
+
     [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> GetAllPublishers()
     {
         var publishers = await _publisherRepository.GetPublishers();
 
-        if (publishers == null) return NotFound("There are no publishers yet");
+        if (publishers == null) { throw new KeyNotFoundException("Publishers"); }
 
-        return Ok(publishers);
+        var response = new ApiResponse
+        {
+            Result = publishers,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
@@ -42,24 +49,35 @@ public class PublishersController : ControllerBase
 
         await _publisherRepository.AddPublisher(newPublisher);
 
-        return Ok("Publisher added");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status201Created,
+            Error = null
+        };
+        return Ok(response);
     }
 
 
-    [HttpDelete]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> DeletePublisher(string id)
     {
         var publisherExists = await _publisherRepository.PublisherExists(id);
 
-        if (!publisherExists)
-        {
-            return NotFound("Publisher with this Id does not exist");
-        }
+        if (!publisherExists) { throw new KeyNotFoundException("Publisher"); }
 
         var deleteResult = await _publisherRepository.RemovePublisher(id);
 
-        if (!deleteResult) return BadRequest("Error while deleteing this publisher");
+        if (!deleteResult) { throw new BadHttpRequestException("Could not delete publisher"); }
 
-        return Ok("Publisher removed");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 }

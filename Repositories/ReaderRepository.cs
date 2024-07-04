@@ -35,7 +35,7 @@ public class ReaderRepository : IReaderRepository
 
     public async Task<Reader> GetReaderById(string id)
     {
-        return await _readerCollection.Find(r => r.Id ==  id).FirstOrDefaultAsync();
+        return await _readerCollection.Find(r => r.Id == id).FirstOrDefaultAsync();
     }
 
     public async Task<Reader> GetReaderByUsername(string username)
@@ -49,30 +49,41 @@ public class ReaderRepository : IReaderRepository
         await _readerCollection.InsertOneAsync(reader);
     }
 
-    public async Task<bool> AddBookToList(string readerId, string bookId)
+    public async Task<bool> AddRemoveBookToList(string readerId, string bookId)
     {
         // var reader = await _readerCollection.Find(r => r.Id == id).FirstOrDefaultAsync();
         // ObjectId bookObjectId = ObjectId.Parse(bookId);
         // reader.BookIds.Add(bookObjectId);
         var readerFiltered = Builders<Reader>.Filter.Eq(r => r.Id, readerId);
 
-        var bookToAdd = Builders<Reader>.Update.AddToSet(r => r.BookIds, ObjectId.Parse(bookId));
+        var reader = await _readerCollection.Find(readerFiltered).FirstOrDefaultAsync();
+        UpdateDefinition<Reader> readerUpdated;
+        if (reader.BookIds.Contains(ObjectId.Parse(bookId)))
+        {
+            // remove
+            readerUpdated = Builders<Reader>.Update.Pull(r => r.BookIds, ObjectId.Parse(bookId));
+        }
+        else
+        {
+            // add
+            readerUpdated = Builders<Reader>.Update.AddToSet(r => r.BookIds, ObjectId.Parse(bookId));
+        }
 
-        var updated = await _readerCollection.UpdateOneAsync(readerFiltered, bookToAdd);
+        var updated = await _readerCollection.UpdateOneAsync(readerFiltered, readerUpdated);
 
         return updated.ModifiedCount > 0;
     }
 
-    public async Task<bool> RemoveBookFromList(string readerId, string bookId)
-    {
-        var readerFiltered = Builders<Reader>.Filter.Eq(r => r.Id, readerId);
+    // public async Task<bool> RemoveBookFromList(string readerId, string bookId)
+    // {
+    //     var readerFiltered = Builders<Reader>.Filter.Eq(r => r.Id, readerId);
 
-        var bookToRemove = Builders<Reader>.Update.Pull(r => r.BookIds, ObjectId.Parse(bookId));
+    //     var bookToRemove = Builders<Reader>.Update.Pull(r => r.BookIds, ObjectId.Parse(bookId));
 
-        var updated = await _readerCollection.UpdateOneAsync(readerFiltered, bookToRemove);
+    //     var updated = await _readerCollection.UpdateOneAsync(readerFiltered, bookToRemove);
 
-        return updated.ModifiedCount > 0;
-    }
+    //     return updated.ModifiedCount > 0;
+    // }
 
     public async Task<bool> UpdateReaderNationality(string readerId, string nationalityId)
     {
