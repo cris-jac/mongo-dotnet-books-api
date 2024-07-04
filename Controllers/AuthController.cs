@@ -20,10 +20,7 @@ public class AuthController : ControllerBase
     private readonly LoginService _loginService;
     private readonly TokenService _tokenService;
     private readonly IUserRepository _userRepository;
-    // private readonly IOptions<DatabaseSettings> _dbSettings;
-    // private readonly IMongoCollection<User> _userCollection;
     public AuthController(
-        // IOptions<DatabaseSettings> dbSettings,
         IUserRepository userRepository,
         RegisterService registerService,
         LoginService loginService,
@@ -34,10 +31,6 @@ public class AuthController : ControllerBase
         _registerService = registerService;
         _loginService = loginService;
         _tokenService = tokenService;
-        // _dbSettings = dbSettings;
-        // var mongoClient = new MongoClient(dbSettings.Value.ConnectionString);
-        // var mongoDatabase = mongoClient.GetDatabase(dbSettings.Value.DatabaseName);
-        // _userCollection = mongoDatabase.GetCollection<User>(dbSettings.Value.UserCollectionName);
     }
 
     [HttpGet("users")]
@@ -45,9 +38,16 @@ public class AuthController : ControllerBase
     {
         var users = await _userRepository.GetUsers();
 
-        if (users == null) return NotFound("No users");
+        if (users == null) { throw new KeyNotFoundException("Users"); }
 
-        return Ok(users);
+        var response = new ApiResponse
+        {
+            Result = users,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
 
@@ -55,24 +55,25 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> Register(RegisterDto registerDto)
     {
         // Get user by email
-        // var user = await _userCollection.Find(u => u.Email == registerDto.Email).FirstOrDefaultAsync();
         var user = await _userRepository.GetUserByEmail(registerDto.Email);
 
         // Check email
-        if (user != null) 
-        {
-            return BadRequest("The email is already taken");
-        }
+        if (user != null) { throw new BadHttpRequestException("The email is already taken"); }
 
         // Register Service
         var newUser = _registerService.Register(registerDto);
-        
+
         // Add
-        // await _userCollection.InsertOneAsync(newUser);
         await _userRepository.AddUserAsync(newUser);
 
-        // 
-        return Ok("User registered");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status201Created,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [HttpPost("login")]
@@ -82,16 +83,10 @@ public class AuthController : ControllerBase
         var user = await _userRepository.GetUserByEmail(requestDto.Email);
 
         // Check if exists
-        if (user == null)
-        {
-            return NotFound("This email is not registered! Please register");
-        }
+        if (user == null) { throw new KeyNotFoundException("This email is not registered"); }
 
         // Check Password
-        if (!_loginService.Login(user, requestDto.Password))
-        {
-            return BadRequest("Invalid password");
-        }
+        if (!_loginService.Login(user, requestDto.Password)) { throw new BadHttpRequestException("Invalid credentials"); }
 
         // Map
         var loginResponse = new LoginResponseDto
@@ -101,6 +96,13 @@ public class AuthController : ControllerBase
             JwtToken = _tokenService.GenerateToken(user)
         };
 
-        return Ok(loginResponse);
+        var response = new ApiResponse
+        {
+            Result = loginResponse,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 }

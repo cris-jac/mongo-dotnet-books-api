@@ -31,22 +31,7 @@ public class AuthorsController : ControllerBase
     {
         var authors = await _authorRepository.GetAllAuthors();
 
-        if (authors == null) return NotFound("No authors yet");
-
-        // var authorsDtoTasks = authors.Select(async author => 
-        // {
-        //     var nationality = await _nationalityRepository.GetNationalityById(author.NationalityId.ToString());
-
-        //     return new GetAuthorDto
-        //     {
-        //         Id = author.Id.ToString(),
-        //         Name = author.Name,
-        //         Bio = author.Bio,
-        //         Nationality = nationality?.Name ?? ""
-        //     };
-        // });
-
-        // var authorsDto = await Task.WhenAll(authorsDtoTasks);
+        if (authors == null) { throw new KeyNotFoundException("Authors"); }
 
         var authorsDto = new List<GetAuthorDto>();
 
@@ -54,7 +39,7 @@ public class AuthorsController : ControllerBase
         {
             var nationality = await _nationalityRepository.GetNationalityById(author.NationalityId.ToString());
 
-            authorsDto.Add(new GetAuthorDto 
+            authorsDto.Add(new GetAuthorDto
             {
                 Id = author.Id.ToString(),
                 Name = author.Name,
@@ -63,7 +48,14 @@ public class AuthorsController : ControllerBase
             });
         }
 
-        return Ok(authorsDto);
+        var response = new ApiResponse
+        {
+            Result = authorsDto,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
@@ -72,35 +64,41 @@ public class AuthorsController : ControllerBase
     {
         var author = await _authorRepository.GetAuthorById(id);
 
-        if (author == null) return NotFound("There are no authors with this Id");
+        if (author == null) { throw new KeyNotFoundException("Author"); }
 
         var nationality = await _nationalityRepository.GetNationalityById(author.NationalityId.ToString());
 
-        var authorDto = new GetAuthorDto 
+        var authorDto = new GetAuthorDto
         {
             Id = author.Id.ToString(),
             Name = author.Name,
             Bio = author.Bio,
-            // Nationality = (nationality!=null) ? nationality.Name : ""
             Nationality = nationality.Name ?? ""
         };
 
-        return Ok(authorDto);
+        var response = new ApiResponse
+        {
+            Result = authorDto,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
-    [HttpGet("GetByCountry")]
+    [HttpGet("nationality/{nationalityId}")]
     public async Task<IActionResult> GetAuthorsByNationality(string nationalityId)
     {
         // Check if nationality exists
         var nationalityExists = await _nationalityRepository.NationalityExists(nationalityId);
 
-        if (!nationalityExists) return NotFound("Nationality does not exist");
+        if (!nationalityExists) { throw new KeyNotFoundException("Nationality"); }
 
         // Check if authors with this nationality exist
         var authors = await _authorRepository.GetAuthorsByNationalityId(nationalityId);
 
-        if (authors == null) return NotFound("There are no authors with this nationality");
+        if (authors == null) { throw new KeyNotFoundException("Authors"); }
 
         // Map authors response
         var nationality = await _nationalityRepository.GetNationalityById(nationalityId);
@@ -108,9 +106,7 @@ public class AuthorsController : ControllerBase
 
         foreach (var author in authors)
         {
-            // var nationality = await _nationalityRepository.GetNationalityById(author.NationalityId.ToString());
-
-            authorsDto.Add(new GetAuthorDto 
+            authorsDto.Add(new GetAuthorDto
             {
                 Id = author.Id.ToString(),
                 Name = author.Name,
@@ -119,7 +115,14 @@ public class AuthorsController : ControllerBase
             });
         }
 
-        return Ok(authorsDto);
+        var response = new ApiResponse
+        {
+            Result = authorsDto,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
@@ -135,31 +138,45 @@ public class AuthorsController : ControllerBase
 
         await _authorRepository.AddAuthor(newAuthor);
 
-        return Ok("Author added");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status201Created,
+            Error = null
+        };
+        return Ok(response);
     }
 
 
-    [HttpDelete]
-    public async Task<IActionResult> RemoveAuthor(string id)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> RemoveAuthor([FromRoute] string id)
     {
         var authorExists = await _authorRepository.AuthorExists(id);
 
-        if (!authorExists) return NotFound("No author with this Id");
-        
+        if (!authorExists) { throw new KeyNotFoundException("Author"); }
+
         var deleteResult = await _authorRepository.RemoveAuthor(id);
 
-        if (!deleteResult) return BadRequest("Error: Author not deleted");
+        if (!deleteResult) { throw new BadHttpRequestException("Could not delete author"); }
 
-        return Ok("Author deleted");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
-    [HttpPut]
-    public async Task<IActionResult> UpdateAuthor(string id, UpdateAuthorDto authorDto)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateAuthor([FromRoute] string id, UpdateAuthorDto authorDto)
     {
         var authorExists = await _authorRepository.AuthorExists(id);
 
-        if (!authorExists) return NotFound("Author not found");
+        if (!authorExists) { throw new KeyNotFoundException("Author"); }
 
         Author authorToReplace = new Author
         {
@@ -170,30 +187,39 @@ public class AuthorsController : ControllerBase
 
         await _authorRepository.UpdateAuthor(id, authorToReplace);
 
-        return Ok("Author updated");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
-    [HttpPut("AddNationalityId")]
-    public async Task<IActionResult> AddNationalityToAuthor(string authorId, string nationalityId)
+    [HttpPut("{authorId}/{nationalityId}")]
+    public async Task<IActionResult> AddNationalityToAuthor([FromRoute] string authorId, [FromRoute] string nationalityId)
     {
         var author = await _authorRepository.GetAuthorById(authorId);
 
-        if (author == null) return NotFound("Not author found with this Id");
+        if (author == null) { throw new KeyNotFoundException("Author"); }
 
         var nationalityExists = await _nationalityRepository.NationalityExists(nationalityId);
 
-        if (!nationalityExists) return NotFound("Nationality does not exist");
-
-        // author.NationalityId = ObjectId.Parse(nationalityId);
-
-        // var updateDefinition = Builders<Author>.Update.Set(a => a.NationalityId, ObjectId.Parse(nationalityId));
-        // var updateResult = await _authorRepository.
+        if (!nationalityExists) { throw new KeyNotFoundException("Nationality"); }
 
         var updateResult = await _authorRepository.UpdateAuthorNationality(authorId, nationalityId);
 
-        if (!updateResult) return BadRequest("Error while updateing the author's nationality");
+        if (!updateResult) { throw new BadHttpRequestException("Could not update the author"); }
 
-        return Ok("Author's nationality updated");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 }

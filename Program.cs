@@ -9,7 +9,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
-using SharpCompress.Readers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,6 +76,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<RegisterService>();
 builder.Services.AddScoped<LoginService>();
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<BookService>();
 
 // Interfaces
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -136,32 +136,5 @@ app.MapControllers();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// app.UseHttpsRedirection();  // Use for http -> https
-
-
-// var summaries = new[]
-// {
-//     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-// };
-
-// app.MapGet("/weatherforecast", () =>
-// {
-//     var forecast =  Enumerable.Range(1, 5).Select(index =>
-//         new WeatherForecast
-//         (
-//             DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-//             Random.Shared.Next(-20, 55),
-//             summaries[Random.Shared.Next(summaries.Length)]
-//         ))
-//         .ToArray();
-//     return forecast;
-// })
-// .WithName("GetWeatherForecast")
-// .WithOpenApi();
 
 app.Run();
-
-// record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-// {
-//     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-// }

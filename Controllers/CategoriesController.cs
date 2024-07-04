@@ -24,10 +24,16 @@ public class CategoriesController : ControllerBase
     {
         var categories = await _categoryRepository.GetAllCategories();
 
-        if (categories == null) return NotFound();
+        if (categories == null) { throw new KeyNotFoundException("Categories"); }
 
-        return Ok(categories);
-        // throw new Exception();
+        var response = new ApiResponse
+        {
+            Result = categories,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 
     [AllowAnonymous]
@@ -36,10 +42,8 @@ public class CategoriesController : ControllerBase
     {
         var category = await _categoryRepository.GetCategoryById(id);
 
-        // if (category == null) return NotFound("Category with this id not found");
         if (category == null) { throw new KeyNotFoundException("Category"); }
 
-        // return Ok(category);
         var response = new ApiResponse
         {
             Result = category,
@@ -61,7 +65,14 @@ public class CategoriesController : ControllerBase
 
         await _categoryRepository.AddCategory(newCategory);
 
-        return Ok("Category added");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status201Created,
+            Error = null
+        };
+        return Ok(response);
     }
 
 
@@ -70,12 +81,19 @@ public class CategoriesController : ControllerBase
     {
         var categoryExists = await _categoryRepository.CategoryExists(id);
 
-        if (!categoryExists) return BadRequest("Category with this Id does not exist");
+        if (!categoryExists) { throw new KeyNotFoundException("Category"); }
 
         var deleteResult = await _categoryRepository.RemoveCategory(id);
 
-        if (!deleteResult) return BadRequest("Error while deleting the category");
+        if (!deleteResult) { throw new BadHttpRequestException("Could not delete category"); }
 
-        return Ok("Category removed successfully");
+        var response = new ApiResponse
+        {
+            Result = null,
+            IsSuccess = true,
+            StatusCode = StatusCodes.Status200OK,
+            Error = null
+        };
+        return Ok(response);
     }
 }

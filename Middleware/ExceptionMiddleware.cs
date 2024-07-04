@@ -39,13 +39,13 @@ public class ExceptionMiddleware : IMiddleware
     {
         int statusCode = StatusCodes.Status500InternalServerError;
         string errorMessage = "Internal server error";
-        string resource = exception.Message;
+        string exceptionMessage = exception.Message;
 
         switch (exception)
         {
             case BadHttpRequestException:
                 statusCode = StatusCodes.Status400BadRequest;
-                errorMessage = "Bad request";
+                errorMessage = $"Bad request: {exceptionMessage}";
                 break;
             case UnauthorizedAccessException:
                 statusCode = StatusCodes.Status401Unauthorized;
@@ -53,7 +53,7 @@ public class ExceptionMiddleware : IMiddleware
                 break;
             case KeyNotFoundException:
                 statusCode = StatusCodes.Status404NotFound;
-                errorMessage = $"{resource} not found";
+                errorMessage = $"{exceptionMessage} not found";
                 break;
             default:
                 statusCode = StatusCodes.Status500InternalServerError;
@@ -64,16 +64,10 @@ public class ExceptionMiddleware : IMiddleware
         var error = new ErrorResponse
         {
             Message = errorMessage,
-            // ExceptionType = exception.GetType().Name,
             StatusCode = (HttpStatusCode)statusCode,
             StackTrace = exception.StackTrace
         };
 
         return error;
-
-        // _logger.LogError(error.SerializeError());
-
-        // context.Response.StatusCode = (int)error.StatusCode;
-        // await context.Response.WriteAsJsonAsync(error);
     }
 }
